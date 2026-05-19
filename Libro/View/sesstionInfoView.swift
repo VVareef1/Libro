@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-public struct sessionInfo: View {
+public struct sessionInfoView: View {
     
     public var body: some View {
         
@@ -25,7 +25,7 @@ public struct sessionInfo: View {
 }
 
 #Preview{
-    sessionInfo()
+    sessionInfoView()
 }
 
 
