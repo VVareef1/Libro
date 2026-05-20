@@ -13,6 +13,7 @@ struct LibroApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             User.self,
+            Book.self
         ])
 
         let modelConfiguration = ModelConfiguration(

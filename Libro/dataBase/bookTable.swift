@@ -2,27 +2,26 @@ import SwiftData
 import Foundation
 
 @Model
-final class book {
+final class Book {
 
-    var id: UUID
-    var bookName: String
-    var bookImage: String
+    var id: UUID = UUID()
+    var bookName: String?
+    var bookImage: String?
 
     // Goals
     var timeGoal: Date?
     var pageGoal: Int?
 
     // Reflection
-    var bookReflection: String
+    var bookReflection: String?
 
     // Rating
-    var bookRate: Double
+    var bookRate: Double?
 
     // Reading Status
-    var bookStatus: Bool
+    var bookStatus: Bool?
 
     init(
-        id: UUID = UUID(),
         bookName: String,
         bookImage: String,
         timeGoal: Date? = nil,
@@ -31,7 +30,6 @@ final class book {
         bookRate: Double = 0.0,
         bookStatus: Bool = false
     ) {
-        self.id = id
         self.bookName = bookName
         self.bookImage = bookImage
         self.timeGoal = timeGoal
