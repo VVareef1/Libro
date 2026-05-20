@@ -9,9 +9,13 @@ import SwiftData
 import Foundation
 
 @Model
-final class User {
 
-    var id: UUID = UUID()
+final class User {
+    
+    // لازم نحذ الاوبشينال (؟) عند المتغيرات عشان مايطلع لي ايرورز بالكلاود كيت
+    
+    
+    var id: UUID = UUID() // و ال id خلوه بنفس الطريقة ذي
     var userName: String?
     var userIcon: String?
     var streak: Int?
