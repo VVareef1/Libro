@@ -5,66 +5,49 @@
 
 import SwiftUI
 
-// MARK: - Mock Data
-
-struct BookItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let author: String
-}
-
-let mockBooks: [BookItem] = [
-    BookItem(title: "Take Along Book", author: "John Steinbeck"),
-    BookItem(title: "تأملات يومية", author: "ماركوس أوريليوس"),
-    BookItem(title: "قصة الفن", author: "إرنست غومبريش"),
-    BookItem(title: "Sapiens", author: "Yuval Noah Harari"),
-    BookItem(title: "Atomic Habits", author: "James Clear"),
-    BookItem(title: "The Alchemist", author: "Paulo Coelho"),
-    BookItem(title: "Dune", author: "Frank Herbert"),
-    BookItem(title: "1984", author: "George Orwell"),
-]
-
-// MARK: - Recommendation View
-
 struct RecommendationView: View {
 
-    @State private var selectedBooks: Set<UUID> = []
-    let onContinue: () -> Void
+    let selectedCategories: [String]
+    let onContinue: (GoogleBook) -> Void
 
-    let recommended = Array(mockBooks.prefix(4))
-    let moreLike    = Array(mockBooks.suffix(4))
+    @StateObject private var viewModel = BooksViewModel()
+    @State private var selectedBook: GoogleBook?
 
     let checkColor = Color(hex: "78583C")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
-            // MARK: Title
-            Text("Books picked for you")
-                .font(.system(size: 26, weight: .bold))
+            Text("Books picked for you")                .font(.system(size: 26, weight: .bold))
                 .foregroundColor(Color("darkbrown"))
                 .padding(.horizontal, 24)
                 .padding(.top, 52)
 
-            // MARK: Subtitle
             Text("Pick at least 1 to continue")
                 .font(.system(size: 15))
                 .foregroundColor(Color("gray"))
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
 
-            // MARK: Scrollable Content
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 28) {
+
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 40)
+                    }
+
                     BookSection(
                         title: "Recommended for you",
-                        books: recommended,
-                        selectedBooks: $selectedBooks
+                        books: viewModel.recommendedBooks,
+                        selectedBook: $selectedBook
                     )
+
                     BookSection(
                         title: "More Books you might like",
-                        books: moreLike,
-                        selectedBooks: $selectedBooks
+                        books: viewModel.moreBooks,
+                        selectedBook: $selectedBook
                     )
                 }
                 .padding(.top, 32)
@@ -73,50 +56,47 @@ struct RecommendationView: View {
 
             Spacer(minLength: 0)
 
-            // MARK: Continue Button
             Button {
-                onContinue()
+                if let selectedBook {
+                    onContinue(selectedBook)
+                }
             } label: {
                 Text("Continue")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(selectedBooks.isEmpty ? Color("darkbrown").opacity(0.4) : .white)
+                    .foregroundColor(selectedBook == nil ? Color("darkbrown").opacity(0.4) : .white)
                     .frame(width: 320, height: 58)
                     .background(
                         Group {
-                            if selectedBooks.isEmpty {
-                                Capsule()
-                                    .fill(.ultraThinMaterial)
+                            if selectedBook == nil {
+                                Capsule().fill(.ultraThinMaterial)
                             } else {
-                                Capsule()
-                                    .fill(checkColor)
+                                Capsule().fill(checkColor)
                             }
                         }
                     )
                     .overlay(
                         Capsule()
                             .stroke(
-                                selectedBooks.isEmpty
-                                    ? Color.white.opacity(0.4)
-                                    : Color.clear,
+                                selectedBook == nil ? Color.white.opacity(0.4) : Color.clear,
                                 lineWidth: 0.5
                             )
                     )
             }
-            .disabled(selectedBooks.isEmpty)
+            .disabled(selectedBook == nil)
             .frame(maxWidth: .infinity)
             .padding(.bottom, 34)
-            .animation(.spring(response: 0.3), value: selectedBooks.isEmpty)
         }
         .background(Color("background").ignoresSafeArea())
+        .task {
+            await viewModel.loadBooks(for: selectedCategories)
+        }
     }
 }
 
-// MARK: - Book Section
-
 struct BookSection: View {
     let title: String
-    let books: [BookItem]
-    @Binding var selectedBooks: Set<UUID>
+    let books: [GoogleBook]
+    @Binding var selectedBook: GoogleBook?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -130,13 +110,9 @@ struct BookSection: View {
                     ForEach(books) { book in
                         BookCard(
                             book: book,
-                            isSelected: selectedBooks.contains(book.id)
+                            isSelected: selectedBook?.id == book.id
                         ) {
-                            if selectedBooks.contains(book.id) {
-                                selectedBooks.remove(book.id)
-                            } else {
-                                selectedBooks.insert(book.id)
-                            }
+                            selectedBook = book
                         }
                     }
                 }
@@ -147,10 +123,8 @@ struct BookSection: View {
     }
 }
 
-// MARK: - Book Card
-
 struct BookCard: View {
-    let book: BookItem
+    let book: GoogleBook
     let isSelected: Bool
     let onTap: () -> Void
 
@@ -161,9 +135,26 @@ struct BookCard: View {
         VStack(alignment: .leading, spacing: 6) {
 
             ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(coverColor)
+
+                if let thumbnailURL = book.thumbnailURL,
+                   let url = URL(string: thumbnailURL) {
+
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(coverColor)
+                    }
                     .frame(width: 100, height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                } else {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(coverColor)
+                        .frame(width: 100, height: 140)
+                }
 
                 ZStack {
                     if isSelected {
@@ -186,8 +177,9 @@ struct BookCard: View {
                 .padding(7)
             }
             .clipShape(RoundedRectangle(cornerRadius: 10))
-            .onTapGesture { onTap() }
-            .animation(.spring(response: 0.3), value: isSelected)
+            .onTapGesture {
+                onTap()
+            }
 
             Text(book.title)
                 .font(.system(size: 12, weight: .medium))
@@ -204,21 +196,22 @@ struct BookCard: View {
     }
 }
 
-// MARK: - Color Hex Extension
-
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
+
         let r = Double((int >> 16) & 0xFF) / 255
         let g = Double((int >> 8) & 0xFF) / 255
         let b = Double(int & 0xFF) / 255
+
         self.init(red: r, green: g, blue: b)
     }
 }
 
-
 #Preview {
-    RecommendationView { }
+    RecommendationView(selectedCategories: ["Fantasy"]) { selectedBook in
+        
+    }
 }

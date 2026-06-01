@@ -4,6 +4,8 @@
 //
 //  Created by Rana on 11/12/1447 AH.
 //
+//
+
 
 import Foundation
 import SwiftUI
@@ -12,7 +14,7 @@ struct ReadingSetupFlowView: View {
     
     @State private var currentStep = 1
     
-    @State private var bookPages = 500
+    @State private var bookPages: Int
     @State private var selectedGoal: String? = nil
     @State private var dailyPages = 0
     @State private var hours = 0
@@ -20,6 +22,10 @@ struct ReadingSetupFlowView: View {
     @State private var seconds = 0
     
     private let totalSteps = 4
+    
+    init(bookPages: Int = 500) {
+        self._bookPages = State(initialValue: bookPages)
+    }
     
     var body: some View {
         ZStack {
@@ -75,6 +81,7 @@ struct ReadingSetupFlowView: View {
         }
     }
 }
+
 #Preview {
     ReadingSetupFlowView()
 }
