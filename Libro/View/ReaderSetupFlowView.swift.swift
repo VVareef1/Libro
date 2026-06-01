@@ -36,9 +36,7 @@ struct ReaderSetupFlowView: View {
                     }
 
                 case 2:
-                    PlaceholderView(
-                        title: "Choose Reader"
-                    ) {
+                    RecommendationView {
                         currentStep += 1
                     }
 
