@@ -37,6 +37,30 @@
 			);
 			target = 1A8B1D9E2FAB32F0000C8AA0 /* Libro */;
 		};
+		C1BD27782FCBBF7300AE3F48 /* Exceptions for "Libro" folder in "LibroTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ocr/CameraView.swift,
+				ocr/ContentView.swift,
+				ocr/CropView.swift,
+				ocr/OCRService.swift,
+				ocr/QuoteViewModel.swift,
+				ocr/SavedQuote.swift,
+			);
+			target = 1A8B1DAD2FAB32F1000C8AA0 /* LibroTests */;
+		};
+		C1BD27792FCBBF7300AE3F48 /* Exceptions for "Libro" folder in "LibroUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ocr/CameraView.swift,
+				ocr/ContentView.swift,
+				ocr/CropView.swift,
+				ocr/OCRService.swift,
+				ocr/QuoteViewModel.swift,
+				ocr/SavedQuote.swift,
+			);
+			target = 1A8B1DB72FAB32F1000C8AA0 /* LibroUITests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +68,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				C1220ECA2FBDA493007201B7 /* Exceptions for "Libro" folder in "Libro" target */,
+				C1BD27782FCBBF7300AE3F48 /* Exceptions for "Libro" folder in "LibroTests" target */,
+				C1BD27792FCBBF7300AE3F48 /* Exceptions for "Libro" folder in "LibroUITests" target */,
 			);
 			path = Libro;
 			sourceTree = "<group>";
