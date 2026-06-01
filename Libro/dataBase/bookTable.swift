@@ -1,41 +1,32 @@
 import SwiftData
 import Foundation
 
+
 @Model
 final class Book {
+   var id: UUID = UUID()
+   var bookName: String?
+   var bookImage: String?
+   var bookGoal: String?
+   var reflection: String?
+   var bookRate: Float?
+   var status: String?
 
-    var id: UUID = UUID()
-    var bookName: String?
-    var bookImage: String?
+   var user: User?
 
-    // Goals
-    var timeGoal: Date?
-    var pageGoal: Int?
+   @Relationship(deleteRule: .cascade, inverse: \Session.book)
+   var sessions: [Session]? = []
 
-    // Reflection
-    var bookReflection: String?
+   @Relationship(deleteRule: .cascade, inverse: \Journey.book)
+   var journey: Journey?
 
-    // Rating
-    var bookRate: Double?
-
-    // Reading Status
-    var bookStatus: Bool?
-
-    init(
-        bookName: String,
-        bookImage: String,
-        timeGoal: Date? = nil,
-        pageGoal: Int? = nil,
-        bookReflection: String = "",
-        bookRate: Double = 0.0,
-        bookStatus: Bool = false
-    ) {
-        self.bookName = bookName
-        self.bookImage = bookImage
-        self.timeGoal = timeGoal
-        self.pageGoal = pageGoal
-        self.bookReflection = bookReflection
-        self.bookRate = bookRate
-        self.bookStatus = bookStatus
-    }
+   init(bookName: String, bookImage: String, bookGoal: String,
+        reflection: String, bookRate: Float, status: String) {
+       self.bookName   = bookName
+       self.bookImage  = bookImage
+       self.bookGoal   = bookGoal
+       self.reflection = reflection
+       self.bookRate   = bookRate
+       self.status     = status
+   }
 }

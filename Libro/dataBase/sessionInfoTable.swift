@@ -1,42 +1,27 @@
-////
-////  sessionInfoTable.swift
-////  Libro
-////
-////  Created by wessal hashim alharbi on 19/05/2026.
-////
-//
-////
-////  userTable.swift
-////  Libro
-////
-////  Created by wessal hashim alharbi on 19/05/2026.
-////
-//
-//import SwiftData
-//import Foundation
-//
-//@Model
-//final class sessionInfo {
-//
-//    var id: UUID
-//    var sessionDate : Date
-//  var quote: String
-//    var pageNum: Int
-//  //  var bookId: UUID
-//    var stoppedPage: Int
-//    
-//    
-////    init(
-////        id: UUID = UUID(),
-////        userName: String,
-////        userIcon: String,
-////        streak : Int = 0
-////    ) {
-////        self.id = id
-////        self.userName = userName
-////        self.userIcon = userIcon
-////        self.streak = streak
-////    }
-//    
-//    
-//}
+
+
+import SwiftData
+import Foundation
+
+@Model
+final class Session {
+    var id: UUID = UUID()
+    var timer: Int?
+    var date: Date?
+    var duration: Int?
+    var stoppedPage: Int?
+    var quote: String?
+    var quotePageNumber: Int?
+ 
+    var book: Book?
+ 
+    init(timer: Int, date: Date, duration: Int,
+         stoppedPage: Int, quote: String, quotePageNumber: Int) {
+        self.timer           = timer
+        self.date            = date
+        self.duration        = duration
+        self.stoppedPage     = stoppedPage
+        self.quote           = quote
+        self.quotePageNumber = quotePageNumber
+    }
+}

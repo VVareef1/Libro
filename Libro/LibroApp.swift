@@ -7,13 +7,17 @@
 
 import SwiftUI
 import SwiftData
+
 @main
 struct LibroApp: App {
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             User.self,
-            Book.self
+            Library.self,
+            Book.self,
+            Session.self,
+            Journey.self
         ])
 
         let modelConfiguration = ModelConfiguration(
