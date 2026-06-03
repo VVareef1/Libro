@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct ContentView: View {
+struct ContentView1: View {
     
 // هي البوابة بين التطبيق وقاعدة البيانات (SwiftData)
 //كل عمليات الحفظ، الإضافة، الحذف، التعديل تمر من هنا
@@ -78,6 +78,6 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView1()
         .modelContainer(for: User.self, inMemory: true)
 }
