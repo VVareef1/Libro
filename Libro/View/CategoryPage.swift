@@ -13,8 +13,8 @@ struct CategoryView: View {
 
     @State private var selectedCategories: Set<String> = []
 
-    let onContinue: () -> Void
-
+    let onContinue: ([String]) -> Void
+    
     let categories = [
         "Fantasy", "Psychology", "Self-Help",
         "Health & Fitness", "Historical Fiction",
@@ -52,7 +52,7 @@ struct CategoryView: View {
 
             // MARK: Continue Button
             Button {
-                onContinue()
+                onContinue(Array(selectedCategories))
             } label: {
                 Text("Continue")
                     .font(.system(size: 18, weight: .semibold))
@@ -248,7 +248,7 @@ struct CategoryChip: View {
 }
 
 #Preview {
-    CategoryView {
-
+    CategoryView { selectedCategories in
+        
     }
 }

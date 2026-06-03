@@ -17,6 +17,7 @@ struct BookPagesView: View {
         bookPages: Int,
         onContinue: @escaping (Int) -> Void
     ) {
+
         self._pageText = State(initialValue: "\(bookPages)")
         self.onContinue = onContinue
     }

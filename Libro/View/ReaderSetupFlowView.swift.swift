@@ -1,5 +1,5 @@
 //
-//  ReaderSetupFlowView.swift.swift
+//  ReaderSetupFlowView.swift
 //  Libro
 //
 //  Created by Rana on 11/12/1447 AH.
@@ -11,6 +11,8 @@ import SwiftUI
 struct ReaderSetupFlowView: View {
 
     @State private var currentStep = 1
+    @State private var selectedCategories: [String] = []
+    @State private var selectedBook: GoogleBook?
 
     private let totalSteps = 3
 
@@ -31,22 +33,16 @@ struct ReaderSetupFlowView: View {
                 switch currentStep {
 
                 case 1:
-                    CategoryView {
+                    CategoryView { categories in
+                        selectedCategories = categories
                         currentStep += 1
                     }
 
                 case 2:
-                    PlaceholderView(
-                        title: "Choose Reader"
-                    ) {
-                        currentStep += 1
-                    }
-
-                case 3:
-                    PlaceholderView(
-                        title: "Books Picked For You"
-                    ) {
-                        currentStep += 1
+                    RecommendationView(
+                        selectedCategories: selectedCategories
+                    ) { book in
+                        selectedBook = book
                     }
 
                 default:
@@ -54,35 +50,10 @@ struct ReaderSetupFlowView: View {
                 }
             }
         }
-    }
-}
-
-struct PlaceholderView: View {
-
-    let title: String
-    let onContinue: () -> Void
-
-    var body: some View {
-        VStack {
-
-            Spacer()
-
-            Text(title)
-                .font(.title2.bold())
-
-            Spacer()
-
-            Button {
-                onContinue()
-            } label: {
-                Text("Continue")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 292, height: 58)
-                    .background(Color("buttons"))
-                    .clipShape(Capsule())
-            }
-            .padding(.bottom, 54)
+        .fullScreenCover(item: $selectedBook) { book in
+            ReadingSetupFlowView(
+                bookPages: book.pageCount
+            )
         }
     }
 }
