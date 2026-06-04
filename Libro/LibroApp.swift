@@ -34,10 +34,11 @@ struct LibroApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
 
     var body: some Scene {
         WindowGroup {
-            ReaderSetupFlowView()
+            ContentView1()
         }
         .modelContainer(sharedModelContainer)
     }
