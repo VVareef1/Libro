@@ -30,9 +30,9 @@ struct CongratulationView: View {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.85))
-                        .frame(width: 161, height: 161)
                         .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 4)
                         .glassEffect()
+                        .frame(width: 161, height: 161)
 
                     Image("uIcon")
                         .resizable()
@@ -56,6 +56,7 @@ struct CongratulationView: View {
                         .frame(height: 54)
                         .background(accentBrown)
                         .cornerRadius(27)
+                        .glassEffect()
                 }
                 .padding(.horizontal, 44)
                 .padding(.bottom, 44)

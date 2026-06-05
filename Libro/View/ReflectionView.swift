@@ -69,6 +69,7 @@ struct ReflectionView: View {
                             .frame(height: 54)
                             .background(accentBrown)
                             .cornerRadius(27)
+                            .glassEffect()
                     }
 
                     Button(action: { viewModel.skip() }) {

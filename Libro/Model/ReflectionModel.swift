@@ -8,7 +8,6 @@
 import Foundation
 import SwiftData
 
-// MARK: - Model
 
 @Model
 final class BookReflection {
