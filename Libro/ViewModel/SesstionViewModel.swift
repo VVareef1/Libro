@@ -4,37 +4,45 @@ import Combine
 @MainActor
 final class CandleTimerViewModel: ObservableObject {
 
-    // MARK: - Published
     @Published private(set) var formattedTime: String = "00:00:00"
     @Published private(set) var isRunning: Bool = false
+    @Published var showNoteSheet: Bool = false
+    @Published private(set) var notes: [BookNote] = []
 
-    // MARK: - Private
     private var model = TimerModel()
     private var timer: DispatchSourceTimer?
 
-    // MARK: - Intents
 
     func onAppear() {
         syncPublished()
+        start()
     }
 
     func togglePlayPause() {
         isRunning ? pause() : start()
     }
 
+    func openNoteSheet() {
+        showNoteSheet = true
+    }
+
+    func addNote(text: String, page: Int) {
+        guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        notes.append(BookNote(text: text, page: page))
+        showNoteSheet = false
+    }
+
     func stop() {
         stopTimer()
         model.isRunning = false
-        model.totalSeconds = 0
         syncPublished()
     }
 
-    // MARK: - Timer control
+    var elapsedSeconds: Int { model.totalSeconds }
+
 
     private func start() {
         stopTimer()
-        guard model.totalSeconds > 0 else { return }
-
         model.isRunning = true
         syncPublished()
 
@@ -42,12 +50,8 @@ final class CandleTimerViewModel: ObservableObject {
         t.schedule(deadline: .now() + 1, repeating: 1.0, leeway: .milliseconds(50))
         t.setEventHandler { [weak self] in
             guard let self else { return }
-            if self.model.totalSeconds > 0 {
-                self.model.totalSeconds -= 1
-                self.syncPublished()
-            } else {
-                self.pause()
-            }
+            self.model.totalSeconds += 1  
+            self.syncPublished()
         }
         t.resume()
         timer = t
@@ -64,7 +68,6 @@ final class CandleTimerViewModel: ObservableObject {
         timer = nil
     }
 
-    // MARK: - Sync
 
     private func syncPublished() {
         formattedTime = model.formattedTime

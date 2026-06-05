@@ -9,13 +9,28 @@ import SwiftUI
 
 struct CandleTimerView: View {
     @StateObject private var viewModel = CandleTimerViewModel()
-    @Environment(\.dismiss) private var dismiss
     @State private var showEndConfirmation = false
+    @State private var showPageAlert = false
+    @State private var pageInput: String = ""
+    @State private var stoppedPage: Int = 0
+    @State private var navigateToSummary = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(red: 0.97, green: 0.95, blue: 0.91).ignoresSafeArea()
+
+                NavigationLink(destination: BookSessionView(
+                    session: BookSession(
+                        bookName: "Book Name",
+                        date: Date(),
+                        timeSpent: Double(viewModel.elapsedSeconds),
+                        stoppedPage: stoppedPage,
+                        notes: viewModel.notes
+                    )
+                ), isActive: $navigateToSummary) {
+                    EmptyView()
+                }
 
                 VStack(spacing: 0) {
                     Spacer()
@@ -46,7 +61,7 @@ struct CandleTimerView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
-                        NavigationLink(destination: ReflectionView()) {
+                        Button(action: { viewModel.openNoteSheet() }) {
                             Image(systemName: "pencil.and.scribble")
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(.white)
@@ -71,14 +86,33 @@ struct CandleTimerView: View {
             .toolbarBackground(Color(red: 0.97, green: 0.95, blue: 0.91), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .onAppear { viewModel.onAppear() }
+            .sheet(isPresented: $viewModel.showNoteSheet) {
+                NoteSheetView(viewModel: viewModel)
+                    .presentationDetents([.height(420)])
+                    .presentationDragIndicator(.hidden)
+                    .presentationCornerRadius(24)
+                    .interactiveDismissDisabled()
+            }
             .alert("End Session?", isPresented: $showEndConfirmation) {
                 Button("End Session", role: .destructive) {
                     viewModel.stop()
-                    dismiss()
+                    showPageAlert = true
                 }
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to end this session?")
+            }
+            .alert("What page did you stop on?", isPresented: $showPageAlert) {
+                TextField("Page number", text: $pageInput)
+                    .keyboardType(.numberPad)
+                Button("Done") {
+                    stoppedPage = Int(pageInput) ?? 0
+                    navigateToSummary = true
+                }
+                Button("Skip", role: .cancel) {
+                    stoppedPage = 0
+                    navigateToSummary = true
+                }
             }
         }
     }
