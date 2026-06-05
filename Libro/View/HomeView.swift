@@ -1,11 +1,10 @@
 //
-//  Homepage.swift
+//  HomeView.swift
 //  Libro
-//
-//  Created by Shaikha on 14/12/1447 AH.
 //
 
 import SwiftUI
+import SwiftData
 
 // MARK: - Reading Book Model
 
@@ -15,7 +14,10 @@ struct ReadingBook: Identifiable {
     let author: String
     let currentPage: Int
     let totalPages: Int
-    var progress: Double { Double(currentPage) / Double(totalPages) }
+    var progress: Double {
+        guard totalPages > 0 else { return 0 }
+        return Double(currentPage) / Double(totalPages)
+    }
     let coverColor: Color
     let thumbnailURL: String?
 }
@@ -24,8 +26,10 @@ struct ReadingBook: Identifiable {
 
 struct HomeView: View {
 
-    let currentBook: GoogleBook
-    let selectedCategories: [String]
+    @Query(filter: #Predicate<Book> { $0.status == "reading" })
+    var readingBooks: [Book]
+
+    var selectedCategories: [String] = []
 
     @StateObject private var viewModel = BooksViewModel()
 
@@ -37,37 +41,33 @@ struct HomeView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
 
-                StreakCardView()
-                    .padding(.horizontal, 20)
-                    .padding(.top, 38)
-
-                SectionHeader(title: "Continue Reading")
-                    .padding(.horizontal, 20)
-                    .padding(.top, 45)
-
-                ContinueReadingCard(book: ReadingBook(
-                    title: currentBook.title,
-                    author: currentBook.author,
-                    currentPage: 0,
-                    totalPages: currentBook.pageCount,
-                    coverColor: Color(hex: "2D6E4E"),
-                    thumbnailURL: currentBook.thumbnailURL
-                ))
-                .padding(.horizontal, 20)
-                .padding(.top, 14)
-
-                SectionHeader(title: "Recommended for you")
-                    .padding(.horizontal, 20)
-                    .padding(.top, 48)
-
-                if viewModel.isLoading {
-                    SkeletonRecommendedScrollView()
-                        .padding(.top, 14)
+                if readingBooks.isEmpty {
+                    EmptyHomeView()
                 } else {
-                    let allBooks = (viewModel.recommendedBooks + viewModel.moreBooks)
-                        .filter { $0.id != currentBook.id }
-                    HomeRecommendedScrollView(books: allBooks)
+
+                    StreakCardView()
+                        .padding(.horizontal, 20)
+                        .padding(.top, 38)
+
+                    SectionHeader(title: "Continue Reading")
+                        .padding(.horizontal, 20)
+                        .padding(.top, 45)
+
+                    ContinueReadingCarousel(books: readingBooks)
                         .padding(.top, 14)
+
+                    SectionHeader(title: "Recommended for you")
+                        .padding(.horizontal, 20)
+                        .padding(.top, 48)
+
+                    if viewModel.isLoading {
+                        SkeletonRecommendedScrollView()
+                            .padding(.top, 14)
+                    } else {
+                        let allBooks = (viewModel.recommendedBooks + viewModel.moreBooks)
+                        HomeRecommendedScrollView(books: allBooks)
+                            .padding(.top, 14)
+                    }
                 }
 
                 Spacer(minLength: 40)
@@ -75,8 +75,89 @@ struct HomeView: View {
         }
         .background(Color("background").ignoresSafeArea())
         .task {
-            await viewModel.loadBooks(for: selectedCategories)
+            if !readingBooks.isEmpty && !selectedCategories.isEmpty {
+                await viewModel.loadBooks(for: selectedCategories)
+            }
         }
+    }
+}
+
+// MARK: - Continue Reading Carousel
+
+struct ContinueReadingCarousel: View {
+    let books: [Book]
+
+    // عرض الكارد = عرض الشاشة - 20 (padding يسار) - 20 (padding يمين) - 20 (كشف الكارد التالي)
+    private let cardWidth: CGFloat = UIScreen.main.bounds.width - 60
+    private let spacing: CGFloat = 14
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: spacing) {
+                ForEach(books) { book in
+                    ContinueReadingCard(book: ReadingBook(
+                        title: book.bookName ?? "",
+                        author: "",
+                        currentPage: 0,
+                        totalPages: 0,
+                        coverColor: Color(hex: "2D6E4E"),
+                        thumbnailURL: book.bookImage
+                    ))
+                    .frame(width: cardWidth)
+                    .scrollTransition(.animated(.spring(response: 0.4, dampingFraction: 0.82))) { content, phase in
+                        content
+                            .scaleEffect(
+                                y: phase.isIdentity ? 1.0 : 0.88,
+                                anchor: .center
+                            )
+                            .opacity(phase.isIdentity ? 1.0 : 0.55)
+                    }
+                }
+            }
+            .scrollTargetLayout()
+            .padding(.leading, 20)   // يتوافق مع padding العناوين
+            .padding(.trailing, 20)
+            .padding(.vertical, 8)
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .frame(height: 150)
+    }
+}
+
+// MARK: - Empty Home
+
+struct EmptyHomeView: View {
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer(minLength: 80)
+
+            Image(systemName: "books.vertical")
+                .font(.system(size: 80))
+                .foregroundColor(Color(hex: "6B4C30").opacity(0.3))
+
+            VStack(spacing: 8) {
+                Text("Start your reading Journey")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(Color("darkbrown"))
+                    .multilineTextAlignment(.center)
+
+                Text("Add some books so you can get started")
+                    .font(.system(size: 15))
+                    .foregroundColor(Color("gray"))
+                    .multilineTextAlignment(.center)
+            }
+
+            Button { } label: {
+                Text("Add Book")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 280, height: 56)
+                    .background(Color(hex: "6B4C30"))
+                    .clipShape(Capsule())
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
     }
 }
 
@@ -96,7 +177,6 @@ struct HomeHeaderView: View {
                             .frame(width: 28)
                             .foregroundColor(Color(hex: "78583C").opacity(0.6))
                     )
-
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Good Morning,")
                         .font(.system(size: 14))
@@ -106,9 +186,7 @@ struct HomeHeaderView: View {
                         .foregroundColor(Color("darkbrown"))
                 }
             }
-
             Spacer()
-
             Circle()
                 .fill(Color(hex: "F0EDE8"))
                 .frame(width: 46, height: 46)
@@ -128,9 +206,7 @@ struct StreakCardView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(hex: "6B4C30"))
-
             HStack(spacing: 16) {
-
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.15))
@@ -139,7 +215,6 @@ struct StreakCardView: View {
                         .font(.system(size: 26))
                         .foregroundColor(Color(hex: "F5A623"))
                 }
-
                 VStack(alignment: .leading, spacing: 4) {
                     Text("0 Days Streak")
                         .font(.system(size: 20, weight: .bold))
@@ -148,7 +223,6 @@ struct StreakCardView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.7))
                 }
-
                 Spacer()
             }
             .padding(.horizontal, 20)
@@ -161,23 +235,18 @@ struct StreakCardView: View {
 
 struct SectionHeader: View {
     let title: String
-
     var body: some View {
         HStack {
             Text(title)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(Color("darkbrown"))
             Spacer()
-            Button {
-            } label: {
+            Button { } label: {
                 HStack(spacing: 2) {
-                    Text("See all")
-                        .font(.system(size: 14))
-                        .foregroundColor(Color("gray"))
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color("gray"))
+                    Text("See all").font(.system(size: 14))
+                    Image(systemName: "chevron.right").font(.system(size: 12))
                 }
+                .foregroundColor(Color("gray"))
             }
         }
     }
@@ -187,25 +256,30 @@ struct SectionHeader: View {
 
 struct ContinueReadingCard: View {
     let book: ReadingBook
-
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
                 .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
-
             HStack(spacing: 16) {
-
                 Group {
                     if let thumbnailURL = book.thumbnailURL,
                        let url = URL(string: thumbnailURL) {
-                        AsyncImage(url: url) { image in
-                            image.resizable().scaledToFill()
-                        } placeholder: {
-                            RoundedRectangle(cornerRadius: 10).fill(book.coverColor)
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 90, height: 120)
+                                    .clipped()
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                            default:
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(book.coverColor)
+                                    .frame(width: 90, height: 120)
+                            }
                         }
-                        .frame(width: 90, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     } else {
                         RoundedRectangle(cornerRadius: 10)
                             .fill(book.coverColor)
@@ -224,6 +298,7 @@ struct ContinueReadingCard: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
+                .frame(width: 90, height: 120)
                 .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -231,13 +306,14 @@ struct ContinueReadingCard: View {
                         Text(book.title)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(Color("darkbrown"))
-                        Text("by \(book.author)")
-                            .font(.system(size: 13))
-                            .foregroundColor(Color("gray"))
+                            .lineLimit(2)
+                        if !book.author.isEmpty {
+                            Text("by \(book.author)")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color("gray"))
+                        }
                     }
-
                     Spacer()
-
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Text("Page \(book.currentPage) of \(book.totalPages)")
@@ -248,14 +324,10 @@ struct ContinueReadingCard: View {
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(Color("darkbrown"))
                         }
-
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(Color(hex: "E0D5C8"))
-                                    .frame(height: 6)
-                                Capsule()
-                                    .fill(Color(hex: "78583C"))
+                                Capsule().fill(Color(hex: "E0D5C8")).frame(height: 6)
+                                Capsule().fill(Color(hex: "78583C"))
                                     .frame(width: geo.size.width * book.progress, height: 6)
                             }
                         }
@@ -271,30 +343,21 @@ struct ContinueReadingCard: View {
     }
 }
 
-// MARK: - Skeleton Loading
+// MARK: - Skeleton
 
 struct ShimmerModifier: ViewModifier {
     @State private var phase: CGFloat = -1
-
     func body(content: Content) -> some View {
         content
             .overlay(
                 GeometryReader { geo in
                     LinearGradient(
-                        colors: [
-                            Color.white.opacity(0),
-                            Color.white.opacity(0.45),
-                            Color.white.opacity(0)
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
+                        colors: [.white.opacity(0), .white.opacity(0.45), .white.opacity(0)],
+                        startPoint: .leading, endPoint: .trailing
                     )
                     .frame(width: geo.size.width * 2)
                     .offset(x: geo.size.width * phase)
-                    .animation(
-                        .linear(duration: 1.2).repeatForever(autoreverses: false),
-                        value: phase
-                    )
+                    .animation(.linear(duration: 1.2).repeatForever(autoreverses: false), value: phase)
                 }
                 .clipped()
             )
@@ -303,26 +366,18 @@ struct ShimmerModifier: ViewModifier {
 }
 
 extension View {
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
-    }
+    func shimmer() -> some View { modifier(ShimmerModifier()) }
 }
 
 struct SkeletonBookCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(hex: "E0D5C8"))
-                .frame(width: 110, height: 155)
-                .shimmer()
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: "E0D5C8"))
-                .frame(width: 90, height: 11)
-                .shimmer()
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: "E0D5C8"))
-                .frame(width: 65, height: 10)
-                .shimmer()
+            RoundedRectangle(cornerRadius: 12).fill(Color(hex: "E0D5C8"))
+                .frame(width: 110, height: 155).shimmer()
+            RoundedRectangle(cornerRadius: 4).fill(Color(hex: "E0D5C8"))
+                .frame(width: 90, height: 11).shimmer()
+            RoundedRectangle(cornerRadius: 4).fill(Color(hex: "E0D5C8"))
+                .frame(width: 65, height: 10).shimmer()
         }
     }
 }
@@ -331,9 +386,7 @@ struct SkeletonRecommendedScrollView: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
-                ForEach(0..<6, id: \.self) { _ in
-                    SkeletonBookCard()
-                }
+                ForEach(0..<6, id: \.self) { _ in SkeletonBookCard() }
             }
             .padding(.horizontal, 20)
         }
@@ -341,11 +394,10 @@ struct SkeletonRecommendedScrollView: View {
     }
 }
 
-// MARK: - Home Recommended Scroll View
+// MARK: - Recommended
 
 struct HomeRecommendedScrollView: View {
     let books: [GoogleBook]
-
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
@@ -358,27 +410,35 @@ struct HomeRecommendedScrollView: View {
     }
 }
 
-// MARK: - Home Recommended Book Card
-
 struct HomeRecommendedBookCard: View {
     let book: GoogleBook
+
+    private let cardW: CGFloat = 95
+    private let cardH: CGFloat = 135
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Group {
-                if let thumbnailURL = book.thumbnailURL,
-                   let url = URL(string: thumbnailURL) {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        RoundedRectangle(cornerRadius: 12).fill(Color(hex: "C4A96A"))
+                if let thumbnailURL = book.thumbnailURL, let url = URL(string: thumbnailURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: cardW, height: cardH)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        default:
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(hex: "C4A96A"))
+                                .frame(width: cardW, height: cardH)
+                        }
                     }
-                    .frame(width: 110, height: 155)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(hex: "C4A96A"))
-                        .frame(width: 110, height: 155)
+                        .frame(width: cardW, height: cardH)
                         .overlay(
                             VStack {
                                 Spacer()
@@ -393,33 +453,29 @@ struct HomeRecommendedBookCard: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
+            .frame(width: cardW, height: cardH)  // حجم ثابت لكل الحالات
             .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
 
             Text(book.title)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(Color("darkbrown"))
                 .lineLimit(2)
-                .frame(width: 110, alignment: .leading)
+                .frame(width: cardW, alignment: .leading)
 
             Text(book.author)
                 .font(.system(size: 11))
                 .foregroundColor(Color("gray"))
                 .lineLimit(1)
-                .frame(width: 110, alignment: .leading)
+                .frame(width: cardW, alignment: .leading)
         }
+        .frame(width: cardW)  // يضمن أن كل الكاردات بنفس العرض
     }
 }
 
 
+// MARK: - Preview
+
 #Preview {
-    HomeView(
-        currentBook: GoogleBook(
-            id: "preview",
-            title: "Atomic Habits",
-            author: "James Clear",
-            thumbnailURL: nil,
-            pageCount: 320
-        ),
-        selectedCategories: ["Self-Help", "Psychology"]
-    )
+    HomeView()
+        .modelContainer(for: [User.self, Book.self, Library.self, Session.self, Journey.self], inMemory: true)
 }

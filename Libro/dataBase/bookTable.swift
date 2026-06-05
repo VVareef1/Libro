@@ -7,6 +7,7 @@ final class Book {
    var id: UUID = UUID()
    var bookName: String?
    var bookImage: String?
+   var bookAuthor: String?
    var bookGoal: String?
    var reflection: String?
    var bookRate: Float?

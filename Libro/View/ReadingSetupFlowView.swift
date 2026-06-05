@@ -11,33 +11,30 @@ import SwiftData
 
 struct ReadingSetupFlowView: View {
 
-    @State private var currentStep = 1
-
-    @State private var bookPages: Int
-    @State private var selectedGoal: String? = nil
-    @State private var dailyPages = 0
-    @State private var hours = 0
-    @State private var minutes = 15
-    @State private var seconds = 0
-
-    let book: GoogleBook
-    let onFinish: () -> Void
-
-    private let totalSteps = 4
-
-    // للوصول للداتابيس
     @Environment(\.modelContext) private var modelContext
 
+    @State private var currentStep  = 1
+    @State private var bookPages:   Int
+    @State private var selectedGoal: String? = nil
+    @State private var dailyPages  = 0
+    @State private var hours       = 0
+    @State private var minutes     = 15
+    @State private var seconds     = 0
+
+    let book:     GoogleBook
+    let onFinish: () -> Void
+
+    private let totalSteps = 3
+
     init(book: GoogleBook, onFinish: @escaping () -> Void) {
-        self.book = book
+        self.book     = book
         self.onFinish = onFinish
         self._bookPages = State(initialValue: book.pageCount)
     }
 
     var body: some View {
         ZStack {
-            Color("background")
-                .ignoresSafeArea()
+            Color("background").ignoresSafeArea()
 
             VStack(spacing: 0) {
 
@@ -45,7 +42,9 @@ struct ReadingSetupFlowView: View {
                     currentStep: $currentStep,
                     totalSteps: totalSteps
                 ) {
-                    saveAndFinish()
+                    // Skip → يحفظ ويروح للهوم
+                    save()
+                    onFinish()
                 }
 
                 switch currentStep {
@@ -65,20 +64,15 @@ struct ReadingSetupFlowView: View {
                     if selectedGoal == "Pages" {
                         DailyPagesView(dailyPages: dailyPages) { pages in
                             dailyPages = pages
-                            currentStep += 1
+                            save()
+                            onFinish()
                         }
                     } else {
                         DailyTimeView { h, m, s in
-                            hours = h
-                            minutes = m
-                            seconds = s
-                            currentStep += 1
+                            hours = h; minutes = m; seconds = s
+                            save()
+                            onFinish()
                         }
-                    }
-
-                case 4:
-                    Color.clear.onAppear {
-                        saveAndFinish()
                     }
 
                 default:
@@ -88,63 +82,42 @@ struct ReadingSetupFlowView: View {
         }
     }
 
-    // MARK: - حفظ البيانات
+    // MARK: - حفظ في SwiftData
 
-    private func saveAndFinish() {
-
-        // 1. إنشاء الكتاب
+    private func save() {
         let newBook = Book(
             bookName:   book.title,
             bookImage:  book.thumbnailURL ?? "",
-            bookGoal:   selectedGoal ?? "Pages",
+            bookGoal:   selectedGoal ?? "",
             reflection: "",
             bookRate:   0.0,
             status:     "reading"
         )
 
-        // 2. إنشاء المكتبة
-        let library = Library(
-            completedBooks: [],
-            wishlistBooks:  []
-        )
+        let library = Library(completedBooks: [], wishlistBooks: [])
 
-        // 3. إنشاء المستخدم وربط الكتاب والمكتبة
-        let user = User(
-            userName: "",
-            userIcon: "",
-            streak:   0
-        )
-
+        let user = User(userName: "", userIcon: "", streak: 0)
         user.books   = [newBook]
         user.library = library
         newBook.user = user
         library.user = user
 
-        // 4. حفظ في الداتابيس
         modelContext.insert(user)
         modelContext.insert(newBook)
         modelContext.insert(library)
 
         do {
             try modelContext.save()
-            print("✅ تم الحفظ بنجاح")
+            print("✅ Saved successfully")
         } catch {
-            print("❌ خطأ في الحفظ: \(error)")
+            print("❌ Error saving: \(error)")
         }
-
-        onFinish()
     }
 }
 
 #Preview {
     ReadingSetupFlowView(
-        book: GoogleBook(
-            id: "preview",
-            title: "Atomic Habits",
-            author: "James Clear",
-            thumbnailURL: nil,
-            pageCount: 320
-        )
+        book: GoogleBook(id: "1", title: "Atomic Habits", author: "James Clear", thumbnailURL: nil, pageCount: 320)
     ) {}
-    .modelContainer(for: [User.self, Book.self, Library.self, Session.self, Journey.self])
+    .modelContainer(for: [User.self, Book.self, Library.self, Session.self, Journey.self], inMemory: true)
 }
