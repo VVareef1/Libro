@@ -21,43 +21,50 @@ struct ReaderSetupFlowView: View {
     private let totalSteps = 3
 
     var body: some View {
-        ZStack {
-            Color("background")
-                .ignoresSafeArea()
 
-            VStack(spacing: 0) {
+        if goHome {
+            HomeView(selectedCategories: selectedCategories)
 
-                ProgressHeaderView(
-                    currentStep: $currentStep,
-                    totalSteps: totalSteps
-                ) {
-                    currentStep = totalSteps + 1
-                }
+        } else {
+            ZStack {
+                Color("background")
+                    .ignoresSafeArea()
 
-                switch currentStep {
+                VStack(spacing: 0) {
 
-                case 1:
-                    CategoryView { categories in
-                        selectedCategories = categories
-                        currentStep += 1
+                    ProgressHeaderView(
+                        currentStep: $currentStep,
+                        totalSteps: totalSteps
+                    ) {
+                        goHome = true
                     }
 
-                case 2:
-                    RecommendationView(
-                        selectedCategories: selectedCategories
-                    ) { book in
-                        selectedBook = book
-                    }
+                    switch currentStep {
 
-                default:
-                    EmptyView()
+                    case 1:
+                        CategoryView { categories in
+                            selectedCategories = categories
+                            currentStep += 1
+                        }
+
+                    case 2:
+                        RecommendationView(
+                            selectedCategories: selectedCategories
+                        ) { book in
+                            selectedBook = book
+                            currentStep += 1
+                        }
+
+                    default:
+                        EmptyView()
+                    }
                 }
             }
-        }
-        .fullScreenCover(item: $selectedBook) { book in
-            ReadingSetupFlowView(
-                bookPages: book.pageCount
-            )
+            .fullScreenCover(item: $selectedBook) { book in
+                ReadingSetupFlowView(book: book) {
+                    goHome = true
+                }
+            }
         }
     }
 }

@@ -85,13 +85,28 @@ struct ReadingSetupFlowView: View {
     // MARK: - حفظ في SwiftData
 
     private func save() {
+
+        // يحفظ الهدف مع القيمة
+        // Pages → "Pages:30"
+        // Time  → "Time:1800" (بالثواني)
+        let goalValue: String
+        if selectedGoal == "Pages" {
+            goalValue = "Pages:\(dailyPages)"
+        } else if selectedGoal == "Time" {
+            let totalSeconds = (hours * 3600) + (minutes * 60) + seconds
+            goalValue = "Time:\(totalSeconds)"
+        } else {
+            goalValue = ""
+        }
+
         let newBook = Book(
             bookName:   book.title,
             bookImage:  book.thumbnailURL ?? "",
-            bookGoal:   selectedGoal ?? "",
+            bookGoal:   goalValue,
             reflection: "",
             bookRate:   0.0,
-            status:     "reading"
+            status:     "reading",
+            totalPages: bookPages
         )
 
         let library = Library(completedBooks: [], wishlistBooks: [])
@@ -108,7 +123,7 @@ struct ReadingSetupFlowView: View {
 
         do {
             try modelContext.save()
-            print("✅ Saved successfully")
+            print("✅ Saved: goal = \(goalValue)")
         } catch {
             print("❌ Error saving: \(error)")
         }
