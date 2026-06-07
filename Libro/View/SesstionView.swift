@@ -2,8 +2,6 @@
 //  SesstionView.swift
 //  Libro
 //
-//  Created by Eatzaz Hafiz on 04/06/2026.
-//
 
 import SwiftUI
 import SwiftData
@@ -103,7 +101,12 @@ struct CandleTimerView: View {
             .alert("End Session?", isPresented: $showEndConfirmation) {
                 Button("End Session", role: .destructive) {
                     viewModel.stop()
-                    showPageAlert = true
+                    if book.goalType == "Pages" {
+                        showPageAlert = true
+                    } else {
+                        saveSession(stoppedAt: 0)
+                        navigateToSummary = true
+                    }
                 }
                 Button("Cancel", role: .cancel) { }
             } message: {
@@ -125,10 +128,11 @@ struct CandleTimerView: View {
         }
     }
 
-    // MARK: - حفظ الجلسة وتحديث البروجرس
+    // MARK: - حفظ الجلسة وتحديث البروجرس والستريك
 
     private func saveSession(stoppedAt page: Int) {
 
+        // 1. حفظ الجلسة
         let session = Session(
             timer:           viewModel.elapsedSeconds,
             date:            Date(),
@@ -141,20 +145,71 @@ struct CandleTimerView: View {
         book.sessions?.append(session)
         modelContext.insert(session)
 
-        if page > 0 {
+        // 2. تحديث البروجرس
+        if book.goalType == "Pages", page > 0 {
             book.currentPage = page
+        } else if book.goalType == "Time" {
+            let pagesRead = viewModel.elapsedSeconds / 120
+            book.currentPage = min(book.currentPage + pagesRead, book.totalPages)
         }
 
+        // 3. لو وصل آخر صفحة
         if book.totalPages > 0 && book.currentPage >= book.totalPages {
             book.status = "finished"
         }
 
+        // 4. تحديث الستريك لو حقق الهدف
+        if goalAchieved() {
+            updateStreak()
+        }
+
         do {
             try modelContext.save()
-            print("✅ Session saved, progress: \(Int(book.progress * 100))%")
+            print("✅ Session saved | progress: \(Int(book.progress * 100))% | streak: \(book.user?.streak ?? 0)")
         } catch {
             print("❌ Error: \(error)")
         }
+    }
+
+    // MARK: - هل حقق الهدف؟
+
+    private func goalAchieved() -> Bool {
+        if book.goalType == "Pages" {
+            let pagesReadToday = stoppedPage - (book.sessions?.dropLast().last?.stoppedPage ?? 0)
+            return pagesReadToday >= book.goalValue
+        } else if book.goalType == "Time" {
+            return viewModel.elapsedSeconds >= book.goalValue
+        }
+        return false
+    }
+
+    // MARK: - تحديث الستريك
+
+    private func updateStreak() {
+        guard let user = book.user else { return }
+
+        let calendar = Calendar.current
+        let today    = calendar.startOfDay(for: Date())
+
+        if let lastDate = user.lastStreakDate {
+            let last = calendar.startOfDay(for: lastDate)
+
+            if last == today {
+                // نفس اليوم — ما نغير شيء
+                return
+            } else if calendar.dateComponents([.day], from: last, to: today).day == 1 {
+                // اليوم التالي — نزيد
+                user.streak = (user.streak ?? 0) + 1
+            } else {
+                // انقطع — يرجع صفر
+                user.streak = 0
+            }
+        } else {
+            // أول مرة — يبدأ من 1
+            user.streak = 1
+        }
+
+        user.lastStreakDate = today
     }
 }
 
@@ -162,5 +217,5 @@ struct CandleTimerView: View {
     let book = Book(bookName: "Atomic Habits", bookImage: "", bookGoal: "Pages:30",
                     reflection: "", bookRate: 0, status: "reading", totalPages: 320)
     CandleTimerView(book: book)
-        .modelContainer(for: [Book.self, Session.self], inMemory: true)
+        .modelContainer(for: [Book.self, Session.self, User.self], inMemory: true)
 }

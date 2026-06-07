@@ -2,8 +2,6 @@
 //  ReadingSetupFlowView.swift
 //  Libro
 //
-//  Created by Rana on 11/12/1447 AH.
-//
 
 import Foundation
 import SwiftUI
@@ -13,22 +11,24 @@ struct ReadingSetupFlowView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @State private var currentStep  = 1
-    @State private var bookPages:   Int
+    @State private var currentStep   = 1
+    @State private var bookPages:    Int
     @State private var selectedGoal: String? = nil
-    @State private var dailyPages  = 0
-    @State private var hours       = 0
-    @State private var minutes     = 15
-    @State private var seconds     = 0
+    @State private var dailyPages   = 0
+    @State private var hours        = 0
+    @State private var minutes      = 15
+    @State private var seconds      = 0
 
-    let book:     GoogleBook
-    let onFinish: () -> Void
+    let book:       GoogleBook
+    let categories: [String]   
+    let onFinish:   () -> Void
 
     private let totalSteps = 3
 
-    init(book: GoogleBook, onFinish: @escaping () -> Void) {
-        self.book     = book
-        self.onFinish = onFinish
+    init(book: GoogleBook, categories: [String] = [], onFinish: @escaping () -> Void) {
+        self.book       = book
+        self.categories = categories
+        self.onFinish   = onFinish
         self._bookPages = State(initialValue: book.pageCount)
     }
 
@@ -42,7 +42,6 @@ struct ReadingSetupFlowView: View {
                     currentStep: $currentStep,
                     totalSteps: totalSteps
                 ) {
-                    // Skip → يحفظ ويروح للهوم
                     save()
                     onFinish()
                 }
@@ -86,9 +85,6 @@ struct ReadingSetupFlowView: View {
 
     private func save() {
 
-        // يحفظ الهدف مع القيمة
-        // Pages → "Pages:30"
-        // Time  → "Time:1800" (بالثواني)
         let goalValue: String
         if selectedGoal == "Pages" {
             goalValue = "Pages:\(dailyPages)"
@@ -108,22 +104,33 @@ struct ReadingSetupFlowView: View {
             status:     "reading",
             totalPages: bookPages
         )
-
-        let library = Library(completedBooks: [], wishlistBooks: [])
-
-        let user = User(userName: "", userIcon: "", streak: 0)
-        user.books   = [newBook]
-        user.library = library
-        newBook.user = user
-        library.user = user
-
-        modelContext.insert(user)
+        newBook.bookAuthor = book.author
         modelContext.insert(newBook)
-        modelContext.insert(library)
+
+        // لو في user موجود نضيف الكتاب له، وإلا نسوي user جديد
+        let descriptor = FetchDescriptor<User>()
+        if let existingUser = try? modelContext.fetch(descriptor).first {
+            newBook.user = existingUser
+            existingUser.books?.append(newBook)
+            // نحدث الـ categories لو تغيرت
+            if !categories.isEmpty {
+                existingUser.categories = categories
+            }
+        } else {
+            let library      = Library(completedBooks: [], wishlistBooks: [])
+            let user         = User(userName: "", userIcon: "", streak: 0)
+            user.categories  = categories  // ← نحفظ الـ categories مع الـ User الجديد
+            user.books       = [newBook]
+            user.library     = library
+            newBook.user     = user
+            library.user     = user
+            modelContext.insert(user)
+            modelContext.insert(library)
+        }
 
         do {
             try modelContext.save()
-            print("✅ Saved: goal = \(goalValue)")
+            print("✅ Saved: \(book.title) | categories: \(categories) | goal: \(goalValue)")
         } catch {
             print("❌ Error saving: \(error)")
         }
@@ -132,7 +139,8 @@ struct ReadingSetupFlowView: View {
 
 #Preview {
     ReadingSetupFlowView(
-        book: GoogleBook(id: "1", title: "Atomic Habits", author: "James Clear", thumbnailURL: nil, pageCount: 320)
+        book: GoogleBook(id: "1", title: "Atomic Habits", author: "James Clear", thumbnailURL: nil, pageCount: 320),
+        categories: ["Self-Help"]
     ) {}
     .modelContainer(for: [User.self, Book.self, Library.self, Session.self, Journey.self], inMemory: true)
 }

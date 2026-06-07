@@ -4,25 +4,29 @@
 //
 
 import SwiftUI
+import SwiftData
 
 // MARK: - Header
 
 struct HomeHeaderView: View {
     let greeting: String
 
+    private let buttonSize: CGFloat = 46
+    private let iconSize:   CGFloat = 18
+    private let brownColor = Color(red: 0.42, green: 0.30, blue: 0.20)
+
     var body: some View {
         HStack {
             HStack(spacing: 12) {
                 Circle()
-                    .fill(Color(hex: "F0EDE8"))
-                    .frame(width: 52, height: 52)
+                    .frame(width: buttonSize, height: buttonSize)
+                    .glassEffect()
                     .overlay(
                         Image(systemName: "person.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 28)
-                            .foregroundColor(Color(hex: "78583C").opacity(0.6))
+                            .font(.system(size: iconSize, weight: .semibold))
+                            .foregroundColor(brownColor)
                     )
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(greeting)
                         .font(.system(size: 14))
@@ -33,14 +37,18 @@ struct HomeHeaderView: View {
                 }
             }
             Spacer()
-            Circle()
-                .fill(Color(hex: "F0EDE8"))
-                .frame(width: 46, height: 46)
-                .overlay(
-                    Image(systemName: "books.vertical.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(Color("darkbrown"))
-                )
+
+            NavigationLink(destination: LibraryView()) {
+                Circle()
+                    .frame(width: buttonSize, height: buttonSize)
+                    .glassEffect()
+                    .overlay(
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: iconSize, weight: .semibold))
+                            .foregroundColor(brownColor)
+                    )
+            }
+            .buttonStyle(.plain)
         }
     }
 }
@@ -48,6 +56,15 @@ struct HomeHeaderView: View {
 // MARK: - Streak Card
 
 struct StreakCardView: View {
+
+    @Query var users: [User]
+
+    private var streak: Int { users.first?.streak ?? 0 }
+
+    private var subtitleText: String {
+        streak == 0 ? "Start reading to build your streak!" : "Keep it going!"
+    }
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
@@ -62,10 +79,10 @@ struct StreakCardView: View {
                         .foregroundColor(Color(hex: "F5A623"))
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("0 Days Streak")
+                    Text("\(streak) Days Streak")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
-                    Text("Start reading to build your streak!")
+                    Text(subtitleText)
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.7))
                 }
@@ -101,6 +118,11 @@ struct SectionHeader: View {
 // MARK: - Empty State
 
 struct EmptyHomeView: View {
+    var onAddBook: () -> Void
+    var onAddManual: () -> Void
+
+    @State private var showActionSheet = false
+
     var body: some View {
         VStack(spacing: 24) {
             Spacer(minLength: 80)
@@ -121,13 +143,18 @@ struct EmptyHomeView: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button { } label: {
+            Button { showActionSheet = true } label: {
                 Text("Add Book")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(width: 280, height: 56)
                     .background(Color(hex: "6B4C30"))
                     .clipShape(Capsule())
+            }
+            .confirmationDialog("", isPresented: $showActionSheet, titleVisibility: .hidden) {
+                Button("Search for a Book") { onAddBook() }
+                Button("Add Manually") { onAddManual() }
+                Button("Cancel", role: .cancel) { }
             }
         }
         .frame(maxWidth: .infinity)
@@ -374,13 +401,22 @@ struct HomeRecommendedBookCard: View {
     private var coverView: some View {
         if let url = URL(string: book.thumbnailURL ?? "") {
             AsyncImage(url: url) { phase in
-                if case .success(let image) = phase {
+                switch phase {
+                case .success(let image):
                     image.resizable().scaledToFill()
                         .frame(width: cardW, height: cardH)
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                } else {
-                    placeholderCover
+                case .empty, .failure:
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "E0D5C8"))
+                        .frame(width: cardW, height: cardH)
+                        .shimmer()
+                @unknown default:
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "E0D5C8"))
+                        .frame(width: cardW, height: cardH)
+                        .shimmer()
                 }
             }
         } else {

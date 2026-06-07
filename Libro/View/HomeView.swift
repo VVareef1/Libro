@@ -11,63 +11,142 @@ struct HomeView: View {
     @Query(filter: #Predicate<Book> { $0.status == "reading" })
     var readingBooks: [Book]
 
-    var selectedCategories: [String] = []
+    @Query var users: [User]
 
-    @StateObject private var viewModel = HomeViewModel()
+    @StateObject private var viewModel   = HomeViewModel()
+    @State private var showAddBookSheet  = false
+    @State private var showManualAdd     = false
+    @State private var showActionSheet   = false
+
+    private var selectedCategories: [String] {
+        users.first?.categories ?? []
+    }
+
+    private var userBookTitles: Set<String> {
+        Set(readingBooks.compactMap {
+            $0.bookName?.trimmingCharacters(in: .whitespaces).lowercased()
+        })
+    }
 
     var body: some View {
         NavigationStack {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .bottomTrailing) {
 
-                    HomeHeaderView(greeting: viewModel.greetingText())
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
 
-                    if readingBooks.isEmpty {
-                        EmptyHomeView()
-                    } else {
-
-                        StreakCardView()
+                        HomeHeaderView(greeting: viewModel.greetingText())
                             .padding(.horizontal, 20)
-                            .padding(.top, 38)
+                            .padding(.top, 20)
 
-                        SectionHeader(title: "Continue Reading")
-                            .padding(.horizontal, 20)
-                            .padding(.top, 45)
-
-                        ContinueReadingCarousel(books: readingBooks)
-                            .padding(.top, 14)
-
-                        SectionHeader(title: "Recommended for you")
-                            .padding(.horizontal, 20)
-                            .padding(.top, 48)
-
-                        if viewModel.isLoading {
-                            SkeletonRecommendedScrollView()
-                                .padding(.top, 14)
+                        if readingBooks.isEmpty {
+                            EmptyHomeView(
+                                onAddBook:   { showAddBookSheet = true },
+                                onAddManual: { showManualAdd    = true }
+                            )
                         } else {
-                            HomeRecommendedScrollView(books: viewModel.allRecommended)
-                                .padding(.top, 14)
-                        }
-                    }
 
-                    Spacer(minLength: 40)
+                            StreakCardView()
+                                .padding(.horizontal, 20)
+                                .padding(.top, 38)
+
+                            SectionHeader(title: "Continue Reading")
+                                .padding(.horizontal, 20)
+                                .padding(.top, 45)
+
+                            ContinueReadingCarousel(books: readingBooks)
+                                .padding(.top, 14)
+
+                            SectionHeader(title: "Recommended for you")
+                                .padding(.horizontal, 20)
+                                .padding(.top, 48)
+
+                            if viewModel.isLoading {
+                                SkeletonRecommendedScrollView()
+                                    .padding(.top, 14)
+                            } else {
+                                let filtered = viewModel.allRecommended
+                                    .filter {
+                                        !userBookTitles.contains(
+                                            $0.title.trimmingCharacters(in: .whitespaces).lowercased()
+                                        )
+                                    }
+                                HomeRecommendedScrollView(books: filtered)
+                                    .padding(.top, 14)
+                            }
+                        }
+
+                        Spacer(minLength: 100)
+                    }
+                }
+                .background(Color("background").ignoresSafeArea())
+                .task {
+                    if !readingBooks.isEmpty && !selectedCategories.isEmpty {
+                        await viewModel.loadBooks(for: selectedCategories)
+                    }
+                }
+
+                // MARK: - زر + (يظهر فقط لما فيه كتب)
+                if !readingBooks.isEmpty {
+                    Button {
+                        showActionSheet = true
+                    } label: {
+                        Circle()
+                            .fill(Color(hex: "6B4C30"))
+                            .frame(width: 60, height: 60)
+                            .overlay(
+                                Image(systemName: "plus")
+                                    .font(.system(size: 26, weight: .medium))
+                                    .foregroundColor(.white)
+                            )
+                            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                    }
+                    .padding(.trailing, 24)
+                    .padding(.bottom, 32)
+                    .confirmationDialog("", isPresented: $showActionSheet, titleVisibility: .hidden) {
+                        Button("Search for a Book") { showAddBookSheet = true }
+                        Button("Add Manually")       { showManualAdd    = true }
+                        Button("Cancel", role: .cancel) { }
+                    }
                 }
             }
-            .background(Color("background").ignoresSafeArea())
-            .task {
-                if !readingBooks.isEmpty {
-                    await viewModel.loadBooks(for: selectedCategories)
-                }
+        }
+        .sheet(isPresented: $showAddBookSheet) {
+            AddBookSheetView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showManualAdd) {
+            AddBookManualView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+        }
+    }
+}
+
+// MARK: - Add Book Sheet
+
+struct AddBookSheetView: View {
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedBook: GoogleBook?
+
+    var body: some View {
+        SearchBookView { book in
+            selectedBook = book
+        }
+        .fullScreenCover(item: $selectedBook) { book in
+            ReadingSetupFlowView(book: book, categories: []) {
+                dismiss()
             }
         }
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     HomeView()
-        .modelContainer(for: [User.self, Book.self, Library.self, Session.self, Journey.self], inMemory: true)
+        .modelContainer(
+            for: [User.self, Book.self, Library.self, Session.self, Journey.self],
+            inMemory: true
+        )
 }

@@ -2,8 +2,6 @@
 //  ReaderSetupFlowView.swift
 //  Libro
 //
-//  Created by Rana on 11/12/1447 AH.
-//
 
 import Foundation
 import SwiftUI
@@ -12,6 +10,7 @@ import SwiftData
 struct ReaderSetupFlowView: View {
 
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
 
     @State private var currentStep:        Int      = 1
     @State private var selectedCategories: [String] = []
@@ -23,12 +22,11 @@ struct ReaderSetupFlowView: View {
     var body: some View {
 
         if goHome {
-            HomeView(selectedCategories: selectedCategories)
+            HomeView()
 
         } else {
             ZStack {
-                Color("background")
-                    .ignoresSafeArea()
+                Color("background").ignoresSafeArea()
 
                 VStack(spacing: 0) {
 
@@ -36,6 +34,7 @@ struct ReaderSetupFlowView: View {
                         currentStep: $currentStep,
                         totalSteps: totalSteps
                     ) {
+                        hasCompletedSetup = true
                         goHome = true
                     }
 
@@ -61,7 +60,8 @@ struct ReaderSetupFlowView: View {
                 }
             }
             .fullScreenCover(item: $selectedBook) { book in
-                ReadingSetupFlowView(book: book) {
+                ReadingSetupFlowView(book: book, categories: selectedCategories) {
+                    hasCompletedSetup = true
                     goHome = true
                 }
             }
