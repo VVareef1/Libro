@@ -38,7 +38,7 @@ struct LibroApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ReaderSetupFlowView()
+            ContentView1()
         }
         .modelContainer(sharedModelContainer)
     }
