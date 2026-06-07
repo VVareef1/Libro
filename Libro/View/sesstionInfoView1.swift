@@ -10,6 +10,9 @@ struct BookSessionView1: View {
     let session: BookSession
     let bookPages: Int
     @State private var currentPage = 0
+    @State private var navigateToHome = false
+
+    private let accentColor = Color("buttons")
 
     private var formattedDate: String {
         let formatter = DateFormatter()
@@ -26,54 +29,86 @@ struct BookSessionView1: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
 
-                Text(session.bookName)
-                    .font(.system(size: 28, weight: .bold))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 16)
-                    .padding(.bottom, 32)
+                    Text(session.bookName)
+                        .font(.system(size: 28, weight: .bold))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .foregroundColor(.darkbrown)
+                        .padding(.top, 16)
+                        .padding(.bottom, 32)
 
-                SessionInfoTimeline(
-                    date: formattedDate,
-                    timeSpent: formattedTime,
-                    stoppedPage: session.stoppedPage,
-                    bookPages: bookPages
-                )
-                .padding(.horizontal, 20)
+                    SessionInfoTimeline(
+                        date: formattedDate,
+                        timeSpent: formattedTime,
+                        stoppedPage: session.stoppedPage,
+                        bookPages: bookPages
+                    )
+                    .padding(.horizontal, 20)
 
-                VStack(spacing: 12) {
-                    TabView(selection: $currentPage) {
-                        ForEach(Array(session.notes.enumerated()), id: \.offset) { index, note in
-                            SwipeNoteCard(text: note.text, page: note.page)
-                                .padding(.horizontal, 24)
-                                .tag(index)
+                    VStack(spacing: 12) {
+                        ZStack {
+                            // Side peek cards
+                            ForEach(Array(session.notes.enumerated()), id: \.offset) { index, note in
+                                let offset = index - currentPage
+                                if abs(offset) == 1 {
+                                    SwipeNoteCard(text: note.text, page: note.page)
+                                        .frame(width: UIScreen.main.bounds.width - 80)
+                                        .frame(height: 320)
+                                        .scaleEffect(0.92)
+                                        .offset(x: CGFloat(offset) * (UIScreen.main.bounds.width - 60))
+                                        .zIndex(0)
+                                }
+                            }
+
+                            // Main swipeable TabView
+                            TabView(selection: $currentPage) {
+                                ForEach(Array(session.notes.enumerated()), id: \.offset) { index, note in
+                                    SwipeNoteCard(text: note.text, page: note.page)
+                                        .frame(width: UIScreen.main.bounds.width - 80)
+                                        .frame(height: 320)
+                                        .tag(index)
+                                }
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .never))
+                            .frame(height: 340)
+                            .zIndex(1)
                         }
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
-                    .frame(height: 350)
 
-                    // Dots below cards
-                    HStack(spacing: 6) {
-                        ForEach(0..<session.notes.count, id: \.self) { i in
-                            Circle()
-                                .fill(i == currentPage
-                                    ? Color(red: 0.56, green: 0.42, blue: 0.28)
-                                    : Color(red: 0.56, green: 0.42, blue: 0.28).opacity(0.3))
-                                .frame(width: 7, height: 7)
+                        // Dots indicator
+                        HStack(spacing: 6) {
+                            ForEach(0..<session.notes.count, id: \.self) { i in
+                                Circle()
+                                    .fill(i == currentPage
+                                          ? Color("buttons")
+                                          : Color("buttons").opacity(0.3))
+                                    .frame(width: 7, height: 7)
+                            }
                         }
+                        .padding(.top, 12)
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
+                    .padding(.top, 32)
+
+                    Spacer(minLength: 40)
                 }
-                .padding(.top, 32)
+            }
 
-                Spacer(minLength: 40)
+            // Navigate to HomeView and clear the stack
+            NavigationLink(
+                destination: HomeView()
+                    .navigationBarBackButtonHidden(true),
+                isActive: $navigateToHome
+            ) {
+                EmptyView()
             }
         }
         .background(Color("background"))
         .navigationBarBackButtonHidden(true)
         .safeAreaInset(edge: .bottom) {
-            HomeButton(action: {})
+            HomeButton(action: { navigateToHome = true })
         }
     }
 }
@@ -84,39 +119,39 @@ struct SwipeNoteCard: View {
     let text: String
     let page: Int
 
-    private let accentColor = Color(red: 0.56, green: 0.42, blue: 0.28)
-
     var body: some View {
-        VStack(alignment: .trailing, spacing: 8) {
-            HStack(alignment: .top, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
 
-                Rectangle()
-                    .fill(accentColor)
-                    .frame(width: 3)
-                    .cornerRadius(1.5)
+            // Large quote mark top-left
+            Text("\u{201C}")
+                .font(.system(size: 48, weight: .bold))
+                .foregroundColor(Color("buttons"))
+                .padding(.leading, 16)
+                .padding(.top, 16)
 
-                Text("\u{201C}\(text)\u{201D}")
-                    .font(.system(size: 28, weight: .regular))
-                    .foregroundColor(Color(UIColor.label))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, 16)
-                    .padding(.vertical, 16)
-                    .frame(maxWidth: .infinity/*, alignment: .leading*/)
+            Spacer()
 
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            // Centered text
+            Text(text)
+                .font(.system(size: 20, weight: .regular))
+                .foregroundColor(Color("darkbrown"))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
 
+            Spacer()
+
+            // Page number bottom-right
             Text("Page: \(page)")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(Color(UIColor.secondaryLabel))
-                .padding(.trailing, 4)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundColor(Color("gray"))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, 20)
+                .padding(.bottom, 20)
         }
-        .padding(.vertical, 20)
-        .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(hex: "F2F2F2"))
-        .cornerRadius(16)
+        .cornerRadius(20)
         .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
     }
 }

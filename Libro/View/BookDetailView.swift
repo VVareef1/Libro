@@ -152,3 +152,11 @@ struct BookDetailView: View {
         if days == 0 { return "1d" }
         return "\(days)d"
     }}
+
+
+#Preview {
+    let book = Book(bookName: "Atomic Habits", bookImage: "", bookGoal: "Pages:30",
+                    reflection: "This book changed the way I think about habits and daily routines.", bookRate: 4, status: "finished", totalPages: 320)
+    BookDetailView(book: book)
+        .modelContainer(for: [Book.self, Session.self, User.self], inMemory: true)
+}

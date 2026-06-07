@@ -49,7 +49,7 @@ struct CongratulationView: View {
                 Spacer()
 
                 Button(action: { viewModel.tapDone() }) {
-                    Text("All Done")
+                    Text("Reflicte")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)

@@ -11,7 +11,7 @@ struct BookSessionView: View {
 
     let session: BookSession
     let bookPages: Int
-    @State private var navigateToRecommendation = false
+    @State private var navigateToHome = false
 
     private var formattedDate: String {
         let formatter = DateFormatter()
@@ -59,14 +59,14 @@ struct BookSessionView: View {
             }
 
             NavigationLink(destination: RecommendationView(selectedCategories: ["Fantasy"]) { _ in
-            }, isActive: $navigateToRecommendation) {
+            }, isActive: $navigateToHome) {
                 EmptyView()
             }
         }
         .background(Color("background"))
         .navigationBarBackButtonHidden(true)
         .safeAreaInset(edge: .bottom) {
-            HomeButton(action: { navigateToRecommendation = true })
+            HomeButton(action: { navigateToHome = true })
         }
     }
 }

@@ -75,11 +75,8 @@ struct NoteSheetView: View {
                                 Image(systemName: "camera")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(brown.opacity(0.6))
+                                
                             }
-//                            ZStack{
-//                                Circle()
-//                                    .frame(width: 30, height: 30)
-//                                    .glassEffect()
                         }
                     }
                 }

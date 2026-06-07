@@ -114,6 +114,8 @@ struct HomeView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
+
         // ── Search sheet ────────────────────────────────────
         .sheet(isPresented: $showAddBookSheet) {
             AddBookSheetView()

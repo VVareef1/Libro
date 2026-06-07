@@ -95,7 +95,7 @@ struct CandleTimerView: View {
             .navigationDestination(item: $navDestination) { destination in
                 switch destination {
                 case .summary:
-                    BookSessionView(
+                    BookSessionView1(
                         session: BookSession(
                             bookName: book.bookName ?? "",
                             date: Date(),
@@ -140,6 +140,8 @@ struct CandleTimerView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
+
     }
 
     // MARK: - حفظ الجلسة وتحديث البروجرس والستريك
