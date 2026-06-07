@@ -43,13 +43,11 @@ struct NoteSheetView: View {
             }
             .padding(.top, 8)
 
-            // Title
             Text("Write a quote or Insight")
                 .font(.headline)
                 .foregroundColor(brown)
                 .frame(maxWidth: .infinity, alignment: .center)
 
-            // Text field
             ZStack(alignment: .topLeading) {
                 if text.isEmpty {
                     Text("quote or Insight")
@@ -63,12 +61,33 @@ struct NoteSheetView: View {
                     .foregroundColor(brown)
                     .frame(height: 120)
                     .scrollContentBackground(.hidden)
+
+                VStack {
+                    Spacer()
+                        HStack {
+                            ZStack{
+                            Circle()
+                                .frame(width: 35, height: 35)
+                                .foregroundColor(Color(""))
+                                .glassEffect()
+                            Spacer()
+                            Button(action: { /* handle camera */ }) {
+                                Image(systemName: "camera")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(brown.opacity(0.6))
+                            }
+//                            ZStack{
+//                                Circle()
+//                                    .frame(width: 30, height: 30)
+//                                    .glassEffect()
+                        }
+                    }
+                }
             }
             .padding(12)
             .background(fieldBackground)
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
-            // Page number
             HStack {
                 Text("Page Number:")
                     .font(.callout.weight(.semibold))
@@ -119,7 +138,6 @@ struct NoteSheetView: View {
         }
         .padding(.horizontal, 24)
         .background(background.ignoresSafeArea())
-
     }
 }
 

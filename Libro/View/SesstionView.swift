@@ -14,6 +14,8 @@ struct CandleTimerView: View {
     @State private var pageInput: String = ""
     @State private var stoppedPage: Int = 0
     @State private var navigateToSummary = false
+    @State private var navigateToCongrats = false
+    let bookPages: Int
 
     var body: some View {
         NavigationStack {
@@ -27,8 +29,13 @@ struct CandleTimerView: View {
                         timeSpent: Double(viewModel.elapsedSeconds),
                         stoppedPage: stoppedPage,
                         notes: viewModel.notes
-                    )
+                    ),
+                    bookPages: bookPages
                 ), isActive: $navigateToSummary) {
+                    EmptyView()
+                }
+
+                NavigationLink(destination: CongratulationView(), isActive: $navigateToCongrats) {
                     EmptyView()
                 }
 
@@ -37,7 +44,7 @@ struct CandleTimerView: View {
 
                     Text(viewModel.formattedTime)
                         .font(.system(size: 56, weight: .bold, design: .rounded))
-                        .foregroundColor(Color(red: 0.42, green: 0.30, blue: 0.20))
+                        .foregroundColor(Color("buttons"))
                         .monospacedDigit()
                         .contentTransition(.numericText())
                         .animation(.default, value: viewModel.formattedTime)
@@ -55,18 +62,18 @@ struct CandleTimerView: View {
                         Button(action: { viewModel.togglePlayPause() }) {
                             Image(systemName: viewModel.isRunning ? "pause" : "play.fill")
                                 .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(Color("lightGray"))
                                 .frame(width: 70, height: 52)
-                                .background(Color(red: 0.42, green: 0.30, blue: 0.20))
+                                .background(Color("buttons"))
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
                         Button(action: { viewModel.openNoteSheet() }) {
                             Image(systemName: "pencil.and.scribble")
                                 .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(Color("lightGray"))
                                 .frame(width: 70, height: 52)
-                                .background(Color(red: 0.42, green: 0.30, blue: 0.20))
+                                .background(Color("buttons"))
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                     }
@@ -107,7 +114,11 @@ struct CandleTimerView: View {
                     .keyboardType(.numberPad)
                 Button("Done") {
                     stoppedPage = Int(pageInput) ?? 0
-                    navigateToSummary = true
+                    if stoppedPage >= bookPages {
+                        navigateToCongrats = true
+                    } else {
+                        navigateToSummary = true
+                    }
                 }
                 Button("Skip", role: .cancel) {
                     stoppedPage = 0
@@ -119,5 +130,5 @@ struct CandleTimerView: View {
 }
 
 #Preview {
-    CandleTimerView()
+    CandleTimerView(bookPages: 500)
 }

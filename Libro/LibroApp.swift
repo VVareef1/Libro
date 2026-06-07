@@ -38,7 +38,7 @@ struct LibroApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CandleTimerView()
+            CandleTimerView(bookPages: 500)
         }
         .modelContainer(sharedModelContainer)
     }

@@ -10,6 +10,8 @@ import SwiftUI
 struct BookSessionView: View {
 
     let session: BookSession
+    let bookPages: Int
+    @State private var navigateToRecommendation = false
 
     private var formattedDate: String {
         let formatter = DateFormatter()
@@ -26,37 +28,45 @@ struct BookSessionView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
 
-                Text(session.bookName)
-                    .font(.system(size: 28, weight: .bold))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 16)
-                    .padding(.bottom, 32)
+                    Text(session.bookName)
+                        .font(.system(size: 28, weight: .bold))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .foregroundColor(.darkbrown)                        .padding(.top, 16)
+                        .padding(.bottom, 32)
 
-                SessionInfoTimeline(
-                    date: formattedDate,
-                    timeSpent: formattedTime,
-                    stoppedPage: session.stoppedPage
-                )
-                .padding(.horizontal, 20)
+                    SessionInfoTimeline(
+                        date: formattedDate,
+                        timeSpent: formattedTime,
+                        stoppedPage: session.stoppedPage,
+                        bookPages: bookPages
+                    )
+                    .padding(.horizontal, 20)
 
-                VStack(spacing: 12) {
-                    ForEach(session.notes) { note in
-                        NoteCard(text: note.text, page: note.page)
+                    VStack(spacing: 12) {
+                        ForEach(session.notes) { note in
+                            NoteCard(text: note.text, page: note.page)
+                        }
                     }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 32)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 32)
 
-                Spacer(minLength: 40)
+                    Spacer(minLength: 40)
+                }
+            }
+
+            NavigationLink(destination: RecommendationView(selectedCategories: ["Fantasy"]) { _ in
+            }, isActive: $navigateToRecommendation) {
+                EmptyView()
             }
         }
         .background(Color("background"))
         .navigationBarBackButtonHidden(true)
         .safeAreaInset(edge: .bottom) {
-            HomeButton()
+            HomeButton(action: { navigateToRecommendation = true })
         }
     }
 }
@@ -67,8 +77,9 @@ struct SessionInfoTimeline: View {
     let date: String
     let timeSpent: String
     let stoppedPage: Int
+    let bookPages: Int
 
-    private let accentColor = Color(red: 0.56, green: 0.42, blue: 0.28)
+    private let accentColor = Color("buttons")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -89,7 +100,7 @@ struct SessionInfoTimeline: View {
 
             TimelineRow(
                 icon: "bookmark",
-                label: "Stopped Page\nNumber: \(stoppedPage)",
+                label: "Stopped Page\nNumber: \(stoppedPage)/\(bookPages)",
                 accentColor: accentColor,
                 showConnector: false
             )
@@ -111,7 +122,7 @@ struct TimelineRow: View {
             VStack(spacing: 0) {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .regular))
-                    .foregroundColor(accentColor)
+                    .foregroundColor(Color("buttons"))
                     .frame(width: 28, height: 28)
 
                 if showConnector {
@@ -125,7 +136,7 @@ struct TimelineRow: View {
 
             Text(label)
                 .font(.system(size: 17, weight: .regular))
-                .foregroundColor(Color(UIColor.label))
+                .foregroundColor(Color("darkbrown"))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 4)
 
@@ -147,13 +158,13 @@ struct NoteCard: View {
             HStack(alignment: .top, spacing: 0) {
 
                 Rectangle()
-                    .fill(accentColor)
+                    .fill(Color("buttons"))
                     .frame(width: 3)
                     .cornerRadius(1.5)
 
-                Text(text)
+                Text("\u{201C}\(text)\u{201D}")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(Color(UIColor.label))
+                    .foregroundColor(Color("darkbrown"))
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.leading, 12)
                     .padding(.vertical, 4)
@@ -163,7 +174,7 @@ struct NoteCard: View {
 
             Text("Page: \(page)")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundColor(Color(UIColor.secondaryLabel))
+                .foregroundColor(Color("gray"))
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 16)
@@ -175,17 +186,18 @@ struct NoteCard: View {
 
 
 struct HomeButton: View {
+    let action: () -> Void
 
     private let accentColor = Color(red: 0.56, green: 0.42, blue: 0.28)
 
     var body: some View {
-        Button(action: {}) {
+        Button(action: action) {
             Text("Home")
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(size: 17, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(accentColor)
+                .background(Color("buttons"))
                 .cornerRadius(27)
         }
         .padding(.horizontal, 44)
@@ -194,8 +206,6 @@ struct HomeButton: View {
         .background(Color("background"))
     }
 }
-
-
 
 
 #Preview {
@@ -210,6 +220,7 @@ struct HomeButton: View {
                 BookNote(text: "Lorem ipsum dolor sit amet.\nConsectetur adipiscing elit.", page: 38),
                 BookNote(text: "Lorem ipsum dolor sit amet.\nConsectetur adipiscing elit.", page: 38)
             ]
-        )
+        ),
+        bookPages: 350
     )
 }
