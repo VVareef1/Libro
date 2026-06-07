@@ -29,7 +29,6 @@ struct BookDetailView: View {
                ScrollView {
                    VStack(spacing: 24) {
 
-                       // ── الغلاف ─────────────────────────────────────
                        Group {
                            if let img = coverImage {
                                Image(uiImage: img)
@@ -45,29 +44,27 @@ struct BookDetailView: View {
                        }
                        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 6)
 
-                       // ── الاسم ───────────────────────────────────────
                        Text(book.bookName ?? "")
-                           .font(.title2).fontWeight(.bold)
+                           .font(.title2).fontWeight(.bold).foregroundColor(Color("darkbrown"))
                            .multilineTextAlignment(.center)
 
-                       // ── التقييم ─────────────────────────────────────
                        if let rate = book.bookRate {
                            HStack(spacing: 6) {
                                ForEach(1...5, id: \.self) { i in
                                    Image(systemName: Float(i) <= rate ? "star.fill" : "star")
-                                       .foregroundStyle(Float(i) <= rate ? Color("darkbrown") : Color.gray.opacity(0.4))
+                                       .foregroundStyle(Float(i) <= rate ? Color("buttons") : Color.gray.opacity(0.4))
                                        .font(.title3)
                                }
                            }
                        }
 
-                       // ── التاريخ والمدة ──────────────────────────────
                        HStack(spacing: 0) {
                            VStack(spacing: 4) {
                                Text(latestSessionDate)
-                                   .font(.title3).fontWeight(.semibold)
+                                   .font(.title3).foregroundColor(Color("darkbrown"))
                                Text("DATE")
-                                   .font(.caption2).foregroundStyle(.secondary)
+                                   .font(.caption2).foregroundColor(Color("gray"))
+
                                    .kerning(1.5)
                            }
                            .frame(maxWidth: .infinity)
@@ -78,15 +75,16 @@ struct BookDetailView: View {
 
                            VStack(spacing: 4) {
                                Text(totalDuration)
-                                   .font(.title3).fontWeight(.semibold)
+                                   .font(.title3).foregroundColor(Color("darkbrown"))
+                                   .fontWeight(.semibold)
                                Text("DURATION")
-                                   .font(.caption2).foregroundStyle(.secondary)
+                                   .font(.caption2)  .foregroundColor(Color("gray"))
+
                                    .kerning(1.5)
                            }
                            .frame(maxWidth: .infinity)
                        }
 
-                       // ── التأمل ──────────────────────────────────────
                        if let reflection = book.reflection, !reflection.isEmpty {
                            Text(reflection)
                                .font(.body).lineSpacing(6)
@@ -95,17 +93,18 @@ struct BookDetailView: View {
                                .frame(maxWidth: .infinity, alignment: .leading)
                                .background(Color.white.opacity(0.6))
                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                               .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 16))
+
                        }
 
-                       // ── زر Journey ──────────────────────────────────
                        NavigationLink(destination: JourneyView(book: book)) {
                            Text("Journey")
                                .font(.title3).fontWeight(.semibold)
                                .foregroundStyle(.white)
                                .frame(maxWidth: .infinity)
                                .padding(.vertical, 18)
-                               .background(Color("darkbrown"))
-                               .clipShape(Capsule())
+                               .background(Color("buttons"))
+                               .clipShape(Capsule()).glassEffect()
                        }
                    }
                    .padding(24)
@@ -118,7 +117,6 @@ struct BookDetailView: View {
                        Image(systemName: "chevron.left")
                            .fontWeight(.medium)
                            .padding(10)
-                           .background(Color.white.opacity(0.8))
                            .clipShape(Circle())
                    }
                    .tint(.primary)
@@ -128,7 +126,6 @@ struct BookDetailView: View {
                        Image(systemName: "square.and.arrow.up")
                            .fontWeight(.medium)
                            .padding(10)
-                           .background(Color.white.opacity(0.8))
                            .clipShape(Circle())
                    }
                    .tint(.primary)

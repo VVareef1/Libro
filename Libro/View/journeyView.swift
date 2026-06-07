@@ -1,11 +1,4 @@
 //
-//  journeyView.swift
-//  Libro
-//
-//  Created by wessal hashim alharbi on 04/06/2026.
-//
-
-//
 //  JourneyView.swift
 //  Libro
 
@@ -16,15 +9,12 @@ struct JourneyView: View {
     let book: Book
     @Environment(\.dismiss) private var dismiss
 
-    // نجمع السيشنز ونرتبها من الأحدث للأقدم
     private var groupedSessions: [(String, [Session])] {
         guard let sessions = book.sessions else { return [] }
-
         let sorted = sessions
             .filter { $0.date != nil }
             .sorted { ($0.date ?? .now) > ($1.date ?? .now) }
 
-        // نجمع بالتاريخ
         var groups: [(String, [Session])] = []
         var currentKey = ""
         var currentGroup: [Session] = []
@@ -44,7 +34,6 @@ struct JourneyView: View {
         if !currentGroup.isEmpty {
             groups.append((currentKey, currentGroup))
         }
-
         return groups
     }
 
@@ -54,7 +43,7 @@ struct JourneyView: View {
                 Color("background").ignoresSafeArea()
 
                 if groupedSessions.isEmpty {
-                    Text("لا توجد سيشنز بعد")
+                    Text("No sessions available")
                         .foregroundStyle(.secondary)
                 } else {
                     ScrollView {
@@ -73,30 +62,30 @@ struct JourneyView: View {
                     }
                 }
             }
-            .navigationTitle(book.bookName ?? "")
+            .navigationTitle(book.bookName ?? "").foregroundColor(Color("darkbrown"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button { dismiss() } label: {
-                        Image(systemName: "chevron.left")
-                            .fontWeight(.medium)
-                            .padding(10)
-                            .background(Color.white.opacity(0.8))
-                            .clipShape(Circle())
-                    }
-                    .tint(.primary)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {} label: {
-                        Image(systemName: "line.3.horizontal")
-                            .fontWeight(.medium)
-                            .padding(10)
-                            .background(Color.white.opacity(0.8))
-                            .clipShape(Circle())
-                    }
-                    .tint(.primary)
-                }
-            }
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarLeading) {
+//                    Button { dismiss() } label: {
+//                        Image(systemName: "chevron.left")
+//                            .fontWeight(.medium)
+//                            .padding(10)
+//                            .background(Color.white.opacity(0.8))
+//                            .clipShape(Circle())
+//                    }
+//                    .tint(.primary)
+//                }
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Button {} label: {
+//                        Image(systemName: "line.3.horizontal")
+//                            .fontWeight(.medium)
+//                            .padding(10)
+//                            .background(Color.white.opacity(0.8))
+//                            .clipShape(Circle())
+//                    }
+//                    .tint(.primary)
+//                }
+//            }
         }
     }
 
@@ -107,7 +96,7 @@ struct JourneyView: View {
     }
 }
 
-// MARK: - TimelineGroup (تاريخ + سيشنزه)
+// MARK: - TimelineGroup
 
 struct TimelineGroup: View {
     let dateLabel: String
@@ -116,29 +105,23 @@ struct TimelineGroup: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-
-            // ── الخط والنقطة ────────────────────────────────────
             VStack(spacing: 0) {
                 Circle()
-                    .fill(isFirst ? Color("darkbrown") : Color.gray.opacity(0.4))
+                    .fill(Color("darkbrown"))
                     .frame(width: 18, height: 18)
 
                 Rectangle()
-                    .fill(Color.gray.opacity(0.25))
+                    .fill(Color(.gray.opacity(0.25)))
                     .frame(width: 2)
                     .frame(maxHeight: .infinity)
             }
             .padding(.top, 4)
 
-            // ── المحتوى ──────────────────────────────────────────
             VStack(alignment: .leading, spacing: 12) {
-
-                // التاريخ
                 Text(dateLabel)
-                    .font(.title3).fontWeight(.semibold)
+                    .font(.title3).foregroundColor(Color("darkbrown")).fontWeight(.semibold)
                     .padding(.bottom, 4)
 
-                // السيشنز
                 ForEach(sessions) { session in
                     SessionCard(session: session)
                 }
@@ -154,61 +137,113 @@ struct TimelineGroup: View {
 
 struct SessionCard: View {
     let session: Session
+    @State private var isExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        ZStack {
+            // الكارد
+            VStack(alignment: .leading, spacing: 12) {
 
-            // الاقتباس
-            if let quote = session.quote, !quote.isEmpty {
-                Text(quote)
-                    .font(.body)
-                    .foregroundStyle(Color.primary.opacity(0.8))
-                    .lineSpacing(4)
-            } else {
-                Text("لا يوجد اقتباس")
-                    .font(.body)
-                    .foregroundStyle(.tertiary)
+                // الاقتباس
+                if let quote = session.quote, !quote.isEmpty {
+                    Text(quote)
+                        .font(.body)
+                        .foregroundColor(Color("darkbrown"))
+                        .lineSpacing(4)
+                        .lineLimit(isExpanded ? nil : 2)  // ← 2 سطر فقط أو كامل
+                        .truncationMode(.tail)
+                } else {
+                    Text("No quote")
+                        .font(.body)
+                        .foregroundStyle(.tertiary)
+                }
+
+                // المدة والصفحة
+                HStack(spacing: 8) {
+                    if let duration = session.duration, duration > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock").font(.caption)
+                            Text(formatDuration(duration)).font(.caption)
+                        }
+                        .foregroundColor(Color("gray"))
+                        Text("•").foregroundColor(Color("gray")).font(.caption)
+                    }
+
+                    if let page = session.stoppedPage, page > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "bookmark").font(.caption)
+                            Text("page \(page)").font(.caption)
+                        }
+                        .foregroundColor(Color("gray"))
+                    }
+
+                    Spacer()
+
+                }
+            }
+            .padding(16)
+            .background(Color.white.opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 14))
+            .onTapGesture {
+                withAnimation(.spring(duration: 0.3)) {
+                    isExpanded.toggle()
+                }
             }
 
-            // المدة والصفحة
-            HStack(spacing: 8) {
-                // المدة
-                if let duration = session.duration, duration > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock")
-                            .font(.caption)
-                        Text(formatDuration(duration))
-                            .font(.caption)
+            // Blur overlay لما يتوسع
+            if isExpanded {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(.ultraThinMaterial)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(duration: 0.3)) {
+                            isExpanded = false
+                        }
                     }
-                    .foregroundStyle(.secondary)
 
-                    Text("•").foregroundStyle(.secondary).font(.caption)
-                }
-
-                // الصفحة
-                if let page = session.stoppedPage, page > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bookmark")
-                            .font(.caption)
-                        Text("page \(page)")
-                            .font(.caption)
+                // الكارد الكبير فوق الـ blur
+                VStack(alignment: .leading, spacing: 16) {
+                    if let quote = session.quote, !quote.isEmpty {
+                        Text(quote)
+                            .font(.body)
+                            .foregroundColor(Color("darkbrown"))
+                            .lineSpacing(6)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        if let duration = session.duration, duration > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock").font(.caption)
+                                Text(formatDuration(duration)).font(.caption)
+                            }
+                            .foregroundColor(Color("gray"))
+                            Text("•").foregroundColor(Color("gray")).font(.caption)
+                        }
+                        if let page = session.stoppedPage, page > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "bookmark").font(.caption)
+                                Text("page \(page)").font(.caption)
+                            }
+                            .foregroundColor(Color("gray"))
+                        }
+                    }
                 }
+                .padding(20)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 16))
 
-                Spacer()
-
-                // زر الـ options
-                Button {} label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
+              //  .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 8)
+                .padding(.horizontal, 8)
+                .onTapGesture {
+                    withAnimation(.spring(duration: 0.3)) {
+                        isExpanded = false
+                    }
                 }
             }
         }
-        .padding(16)
-        .background(Color.white.opacity(0.7))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     private func formatDuration(_ seconds: Int) -> String {

@@ -11,6 +11,8 @@ import SwiftData
 @main
 struct LibroApp: App {
 
+    @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             User.self,
@@ -34,11 +36,15 @@ struct LibroApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
-    
 
     var body: some Scene {
         WindowGroup {
-            CandleTimerView(bookPages: 500)
+            if hasCompletedSetup {
+                HomeView()
+            } else {
+                ReaderSetupFlowView()
+            }
+
         }
         .modelContainer(sharedModelContainer)
     }
