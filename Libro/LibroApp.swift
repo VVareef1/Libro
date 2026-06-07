@@ -38,7 +38,7 @@ struct LibroApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CandleTimerView()
+            SplashView()
         }
         .modelContainer(sharedModelContainer)
     }
