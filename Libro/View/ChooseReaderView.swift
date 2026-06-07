@@ -11,11 +11,10 @@ struct ChooseReaderView: View {
     var onContinue: () -> Void
 
     @State private var name           = ""
-    @State private var selectedAvatar = 3          // avatar3 في المنتصف أول ما يفتح
+    @State private var selectedAvatar = 3
 
     @Environment(\.modelContext) private var modelContext
 
-    // الترتيب: 1، 2، 3 في المنتصف، 4
     private let avatarOrder = [1, 2, 3, 4]
 
     var body: some View {
@@ -53,8 +52,7 @@ struct ChooseReaderView: View {
                     .frame(height: 1)
                     .padding(.horizontal, 24)
             }
-            .onTapGesture { }   // يمنع الـ ScrollView من سرقة الـ tap
-
+            .onTapGesture { }
             Spacer()
 
             // ── Continue button ───────────────────────────────────
@@ -119,7 +117,6 @@ struct AvatarCarousel: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: spacing) {
 
-                        // ── leading padding عشان أول عنصر يتمركز ──
                         let leadingPad = leadingPadding(geo: geo)
                         Color.clear.frame(width: leadingPad)
 
@@ -164,12 +161,10 @@ struct AvatarCarousel: View {
                 .scrollTargetBehavior(.viewAligned)
                 .scrollDismissesKeyboard(.immediately)
                 .onAppear {
-                    // ابدأ بالعنصر الثالث (selectedAvatar) في المنتصف
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                         proxy.scrollTo(selectedAvatar, anchor: .center)
                     }
                 }
-                // snap عند انتهاء الـ drag
                 .simultaneousGesture(
                     DragGesture()
                         .onEnded { value in

@@ -18,7 +18,6 @@ struct HomeView: View {
     @State private var showManualAdd    = false
     @State private var showActionSheet  = false
 
-    // ── sheet الاقتراحات ────────────────────────────────────
     @State private var selectedRecommended: GoogleBook? = nil
 
     private var selectedCategories: [String] {

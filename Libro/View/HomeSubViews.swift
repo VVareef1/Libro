@@ -402,7 +402,7 @@ struct HomeRecommendedScrollView: View {
 
 struct HomeRecommendedBookCard: View {
     let book:  GoogleBook
-    var onTap: () -> Void        // ── action عند الضغط ──
+    var onTap: () -> Void       
 
     private let cardW: CGFloat = 95
     private let cardH: CGFloat = 135

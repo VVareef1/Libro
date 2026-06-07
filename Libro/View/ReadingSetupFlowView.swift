@@ -81,7 +81,7 @@ struct ReadingSetupFlowView: View {
         }
     }
 
-    // MARK: - حفظ في SwiftData
+    // MARK:
 
     private func save() {
 
@@ -107,19 +107,17 @@ struct ReadingSetupFlowView: View {
         newBook.bookAuthor = book.author
         modelContext.insert(newBook)
 
-        // لو في user موجود نضيف الكتاب له، وإلا نسوي user جديد
         let descriptor = FetchDescriptor<User>()
         if let existingUser = try? modelContext.fetch(descriptor).first {
             newBook.user = existingUser
             existingUser.books?.append(newBook)
-            // نحدث الـ categories لو تغيرت
             if !categories.isEmpty {
                 existingUser.categories = categories
             }
         } else {
             let library      = Library(completedBooks: [], wishlistBooks: [])
             let user         = User(userName: "", userIcon: "", streak: 0)
-            user.categories  = categories  // ← نحفظ الـ categories مع الـ User الجديد
+            user.categories  = categories  
             user.books       = [newBook]
             user.library     = library
             newBook.user     = user

@@ -17,7 +17,7 @@ struct ReaderSetupFlowView: View {
     @State private var selectedBook:       GoogleBook?
     @State private var goHome:             Bool     = false
 
-    private let totalSteps = 4   // 1: Reader  2: Category  3: Recommendation  4: ReadingSetup
+    private let totalSteps = 4   
 
     var body: some View {
 

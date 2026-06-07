@@ -116,7 +116,6 @@ struct BookSearchDetailSheet: View {
                     .frame(maxWidth: .infinity)
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isLoadingCover)
 
-                    // ── Book Info ─────────────────────────────────
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Book Info")
                             .font(.system(size: 17, weight: .semibold))
@@ -126,7 +125,6 @@ struct BookSearchDetailSheet: View {
 
                         glassCard {
                             VStack(spacing: 0) {
-                                // Book Name — read only
                                 Text(bookName)
                                     .font(.system(size: 15))
                                     .foregroundStyle(Color(.label))
@@ -136,7 +134,6 @@ struct BookSearchDetailSheet: View {
 
                                 cardDivider
 
-                                // Author — read only
                                 Text(bookAuthor)
                                     .font(.system(size: 15))
                                     .foregroundStyle(Color(.label))
@@ -146,7 +143,6 @@ struct BookSearchDetailSheet: View {
 
                                 cardDivider
 
-                                // Total Pages — editable
                                 TextField("Total Pages", text: $totalPages)
                                     .font(.system(size: 15))
                                     .keyboardType(.numberPad)
@@ -401,7 +397,6 @@ struct BookSearchDetailSheet: View {
             goalValue = total > 0 ? "Time:\(total)" : ""
         }
 
-        // Encode cover to base64
         var imageBase64 = ""
         if let img = coverImage, let data = img.jpegData(compressionQuality: 0.8) {
             imageBase64 = data.base64EncodedString()

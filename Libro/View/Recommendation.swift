@@ -33,7 +33,6 @@ struct RecommendationView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 28) {
 
-                    // القسم الأول
                     VStack(alignment: .leading, spacing: 14) {
                         Text("Recommended for you")
                             .font(.system(size: 18, weight: .semibold))
@@ -47,7 +46,6 @@ struct RecommendationView: View {
                         }
                     }
 
-                    // القسم الثاني
                     VStack(alignment: .leading, spacing: 14) {
                         Text("More Books you might like")
                             .font(.system(size: 18, weight: .semibold))
@@ -104,7 +102,7 @@ struct RecommendationView: View {
     }
 }
 
-// MARK: - Books Row (الحقيقية - بدون عنوان)
+// MARK: - Books Row
 
 struct BooksRow: View {
     let books: [GoogleBook]
@@ -128,7 +126,7 @@ struct BooksRow: View {
     }
 }
 
-// MARK: - Skeleton Books Row (بدون عنوان)
+// MARK: - Skeleton Books Row
 
 struct SkeletonBooksRow: View {
     var body: some View {

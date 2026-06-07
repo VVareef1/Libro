@@ -105,7 +105,6 @@ struct TimelineGroup: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            // الخط والنقطة
             VStack(spacing: 0) {
                 Circle()
                     .fill(Color("darkbrown"))

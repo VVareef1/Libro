@@ -29,7 +29,6 @@ struct BookDetailView: View {
                ScrollView {
                    VStack(spacing: 24) {
 
-                       // ── الغلاف ─────────────────────────────────────
                        Group {
                            if let img = coverImage {
                                Image(uiImage: img)
@@ -45,12 +44,10 @@ struct BookDetailView: View {
                        }
                        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 6)
 
-                       // ── الاسم ───────────────────────────────────────
                        Text(book.bookName ?? "")
                            .font(.title2).fontWeight(.bold).foregroundColor(Color("darkbrown"))
                            .multilineTextAlignment(.center)
 
-                       // ── التقييم ─────────────────────────────────────
                        if let rate = book.bookRate {
                            HStack(spacing: 6) {
                                ForEach(1...5, id: \.self) { i in
@@ -61,7 +58,6 @@ struct BookDetailView: View {
                            }
                        }
 
-                       // ── التاريخ والمدة ──────────────────────────────
                        HStack(spacing: 0) {
                            VStack(spacing: 4) {
                                Text(latestSessionDate)
@@ -89,7 +85,6 @@ struct BookDetailView: View {
                            .frame(maxWidth: .infinity)
                        }
 
-                       // ── التأمل ──────────────────────────────────────
                        if let reflection = book.reflection, !reflection.isEmpty {
                            Text(reflection)
                                .font(.body).lineSpacing(6)
@@ -102,7 +97,6 @@ struct BookDetailView: View {
 
                        }
 
-                       // ── زر Journey ──────────────────────────────────
                        NavigationLink(destination: JourneyView(book: book)) {
                            Text("Journey")
                                .font(.title3).fontWeight(.semibold)

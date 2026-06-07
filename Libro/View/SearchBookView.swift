@@ -98,7 +98,6 @@ struct SearchBookView: View {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(filteredBooks) { book in
                             SearchBookCard(book: book) {
-                                // ── فتح الـ sheet بدل onSelect مباشرة ──
                                 selectedBook   = book
                                 showDetailSheet = true
                             }
@@ -123,7 +122,6 @@ struct SearchBookView: View {
         // ── Bottom Sheet ─────────────────────────────────────
         .sheet(item: $selectedBook) { book in
             BookSearchDetailSheet(googleBook: book) {
-                // بعد الحفظ: نغلق SearchBookView كلها
                 onSelect(book)
                 dismiss()
             }
@@ -131,7 +129,7 @@ struct SearchBookView: View {
     }
 }
 
-// MARK: - Search Book Card  (بدون تغيير)
+// MARK: - Search Book Card
 
 struct SearchBookCard: View {
     let book:  GoogleBook
@@ -187,7 +185,7 @@ struct SearchBookCard: View {
     }
 }
 
-// MARK: - Skeleton Grid  (بدون تغيير)
+// MARK: - Skeleton Grid
 
 struct SkeletonGridView: View {
     private let columns = [
