@@ -13,10 +13,13 @@ struct HomeView: View {
 
     @Query var users: [User]
 
-    @StateObject private var viewModel   = HomeViewModel()
-    @State private var showAddBookSheet  = false
-    @State private var showManualAdd     = false
-    @State private var showActionSheet   = false
+    @StateObject private var viewModel  = HomeViewModel()
+    @State private var showAddBookSheet = false
+    @State private var showManualAdd    = false
+    @State private var showActionSheet  = false
+
+    // ── sheet الاقتراحات ────────────────────────────────────
+    @State private var selectedRecommended: GoogleBook? = nil
 
     private var selectedCategories: [String] {
         users.first?.categories ?? []
@@ -44,6 +47,7 @@ struct HomeView: View {
                                 onAddBook:   { showAddBookSheet = true },
                                 onAddManual: { showManualAdd    = true }
                             )
+                            .frame(height: UIScreen.main.bounds.height - 160)
                         } else {
 
                             StreakCardView()
@@ -71,8 +75,11 @@ struct HomeView: View {
                                             $0.title.trimmingCharacters(in: .whitespaces).lowercased()
                                         )
                                     }
-                                HomeRecommendedScrollView(books: filtered)
-                                    .padding(.top, 14)
+                                HomeRecommendedScrollView(books: filtered) { book in
+                                    // ── فتح الـ sheet عند الضغط ──
+                                    selectedRecommended = book
+                                }
+                                .padding(.top, 14)
                             }
                         }
 
@@ -86,11 +93,8 @@ struct HomeView: View {
                     }
                 }
 
-                // MARK: - زر + (يظهر فقط لما فيه كتب)
                 if !readingBooks.isEmpty {
-                    Button {
-                        showActionSheet = true
-                    } label: {
+                    Button { showActionSheet = true } label: {
                         Circle()
                             .fill(Color(hex: "6B4C30"))
                             .frame(width: 60, height: 60)
@@ -111,20 +115,30 @@ struct HomeView: View {
                 }
             }
         }
+        // ── Search sheet ────────────────────────────────────
         .sheet(isPresented: $showAddBookSheet) {
             AddBookSheetView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        // ── Manual add sheet ────────────────────────────────
         .sheet(isPresented: $showManualAdd) {
             AddBookManualView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.hidden)
         }
+        // ── Recommended book sheet ──────────────────────────
+        .sheet(item: $selectedRecommended) { book in
+            BookSearchDetailSheet(googleBook: book) {
+                selectedRecommended = nil
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
+        }
     }
 }
 
-// MARK: - Add Book Sheet
+// MARK: - Add Book Sheet (Search)
 
 struct AddBookSheetView: View {
 
@@ -139,6 +153,34 @@ struct AddBookSheetView: View {
             ReadingSetupFlowView(book: book, categories: []) {
                 dismiss()
             }
+        }
+    }
+}
+
+// MARK: - Tab Bar Item
+
+struct TabBarItem: View {
+    let icon: String
+    let label: String
+    let isActive: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 3) {
+                Image(systemName: icon + (isActive ? ".fill" : ""))
+                    .font(.system(size: 20))
+                    .foregroundColor(isActive ? Color("darkbrown") : Color(.systemGray3))
+                Text(label)
+                    .font(.system(size: 10))
+                    .foregroundColor(isActive ? Color("darkbrown") : Color(.systemGray3))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+                Capsule().fill(isActive ? Color(.systemGray6) : Color.clear)
+                    .padding(.horizontal, 4)
+            )
         }
     }
 }

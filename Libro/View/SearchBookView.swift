@@ -13,6 +13,10 @@ struct SearchBookView: View {
     @StateObject private var viewModel = BooksViewModel()
     @State private var searchText      = ""
 
+    // ── Sheet state ──────────────────────────────────────────
+    @State private var selectedBook: GoogleBook? = nil
+    @State private var showDetailSheet = false
+
     private let columns = [
         GridItem(.flexible()),
         GridItem(.flexible()),
@@ -20,11 +24,7 @@ struct SearchBookView: View {
     ]
 
     private var filteredBooks: [GoogleBook] {
-        guard !searchText.isEmpty else { return viewModel.allBooks }
-        return viewModel.allBooks.filter {
-            $0.title.localizedCaseInsensitiveContains(searchText) ||
-            $0.author.localizedCaseInsensitiveContains(searchText)
-        }
+        viewModel.allBooks
     }
 
     var body: some View {
@@ -38,9 +38,7 @@ struct SearchBookView: View {
 
                 Spacer()
 
-                Button {
-                    dismiss()
-                } label: {
+                Button { dismiss() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color("darkbrown"))
@@ -66,9 +64,7 @@ struct SearchBookView: View {
                     .autocorrectionDisabled()
 
                 if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
+                    Button { searchText = "" } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(Color("gray"))
                     }
@@ -102,7 +98,9 @@ struct SearchBookView: View {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(filteredBooks) { book in
                             SearchBookCard(book: book) {
-                                onSelect(book)
+                                // ── فتح الـ sheet بدل onSelect مباشرة ──
+                                selectedBook   = book
+                                showDetailSheet = true
                             }
                         }
                     }
@@ -112,13 +110,28 @@ struct SearchBookView: View {
             }
         }
         .background(Color("background").ignoresSafeArea())
-        .task {
-            await viewModel.loadAllBooks()
+        .task { await viewModel.loadAllBooks() }
+        .onChange(of: searchText) { _, newValue in
+            Task {
+                if newValue.count >= 2 {
+                    await viewModel.searchBooks(query: newValue)
+                } else if newValue.isEmpty {
+                    await viewModel.loadAllBooks()
+                }
+            }
+        }
+        // ── Bottom Sheet ─────────────────────────────────────
+        .sheet(item: $selectedBook) { book in
+            BookSearchDetailSheet(googleBook: book) {
+                // بعد الحفظ: نغلق SearchBookView كلها
+                onSelect(book)
+                dismiss()
+            }
         }
     }
 }
 
-// MARK: - Search Book Card
+// MARK: - Search Book Card  (بدون تغيير)
 
 struct SearchBookCard: View {
     let book:  GoogleBook
@@ -158,10 +171,8 @@ struct SearchBookCard: View {
         if let url = URL(string: book.thumbnailURL ?? "") {
             AsyncImage(url: url) { phase in
                 switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                default:
-                    placeholderCover
+                case .success(let image): image.resizable().scaledToFill()
+                default: placeholderCover
                 }
             }
         } else {
@@ -176,7 +187,7 @@ struct SearchBookCard: View {
     }
 }
 
-// MARK: - Skeleton Grid
+// MARK: - Skeleton Grid  (بدون تغيير)
 
 struct SkeletonGridView: View {
     private let columns = [

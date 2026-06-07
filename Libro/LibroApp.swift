@@ -44,6 +44,7 @@ struct LibroApp: App {
             } else {
                 ReaderSetupFlowView()
             }
+
         }
         .modelContainer(sharedModelContainer)
     }

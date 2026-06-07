@@ -17,7 +17,7 @@ struct ReaderSetupFlowView: View {
     @State private var selectedBook:       GoogleBook?
     @State private var goHome:             Bool     = false
 
-    private let totalSteps = 3
+    private let totalSteps = 4   // 1: Reader  2: Category  3: Recommendation  4: ReadingSetup
 
     var body: some View {
 
@@ -41,12 +41,20 @@ struct ReaderSetupFlowView: View {
                     switch currentStep {
 
                     case 1:
+                        // ── Step 1: Choose a Reader ──────────────
+                        ChooseReaderView {
+                            currentStep += 1
+                        }
+
+                    case 2:
+                        // ── Step 2: Categories ───────────────────
                         CategoryView { categories in
                             selectedCategories = categories
                             currentStep += 1
                         }
 
-                    case 2:
+                    case 3:
+                        // ── Step 3: Recommendation ───────────────
                         RecommendationView(
                             selectedCategories: selectedCategories
                         ) { book in

@@ -11,27 +11,48 @@ import SwiftData
 struct HomeHeaderView: View {
     let greeting: String
 
+    @Query private var users: [User]
+
+    private var currentUser: User? { users.first }
+
+    private var userImage: UIImage? {
+        guard let icon = currentUser?.userIcon, !icon.isEmpty else { return nil }
+        if let img = UIImage(named: icon) { return img }
+        if let data = Data(base64Encoded: icon) { return UIImage(data: data) }
+        return nil
+    }
+
     private let buttonSize: CGFloat = 46
-    private let iconSize:   CGFloat = 18
-    private let brownColor = Color(red: 0.42, green: 0.30, blue: 0.20)
+    private let iconSize:   CGFloat = 20
 
     var body: some View {
         HStack {
             HStack(spacing: 12) {
                 Circle()
+                    .fill(Color(hex: "E8E0D8"))
                     .frame(width: buttonSize, height: buttonSize)
-                    .glassEffect()
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: iconSize, weight: .semibold))
-                            .foregroundColor(brownColor)
-                    )
+                    .overlay {
+                        if let img = userImage {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: buttonSize - 4, height: buttonSize - 4)
+                                .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: iconSize)
+                                .foregroundColor(Color(hex: "78583C").opacity(0.6))
+                        }
+                    }
+                    .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(greeting)
                         .font(.system(size: 14))
-                        .foregroundColor(Color("gray"))
-                    Text("Reader")
+                        .foregroundColor(Color(hex: "78583C").opacity(0.6))
+                    Text(currentUser?.userName ?? "Reader")
                         .font(.system(size: 26, weight: .bold))
                         .foregroundColor(Color("darkbrown"))
                 }
@@ -40,13 +61,16 @@ struct HomeHeaderView: View {
 
             NavigationLink(destination: LibraryView()) {
                 Circle()
+                    .fill(Color(hex: "E8E0D8"))
                     .frame(width: buttonSize, height: buttonSize)
-                    .glassEffect()
                     .overlay(
                         Image(systemName: "books.vertical.fill")
-                            .font(.system(size: iconSize, weight: .semibold))
-                            .foregroundColor(brownColor)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: iconSize)
+                            .foregroundColor(Color(hex: "78583C").opacity(0.6))
                     )
+                    .clipShape(Circle())
             }
             .buttonStyle(.plain)
         }
@@ -124,41 +148,42 @@ struct EmptyHomeView: View {
     @State private var showActionSheet = false
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer(minLength: 80)
+        GeometryReader { geo in
+            VStack(spacing: 24) {
+                Image(systemName: "books.vertical")
+                    .font(.system(size: 80))
+                    .foregroundColor(Color(hex: "6B4C30").opacity(0.3))
 
-            Image(systemName: "books.vertical")
-                .font(.system(size: 80))
-                .foregroundColor(Color(hex: "6B4C30").opacity(0.3))
+                VStack(spacing: 8) {
+                    Text("Start your reading Journey")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color("darkbrown"))
+                        .multilineTextAlignment(.center)
 
-            VStack(spacing: 8) {
-                Text("Start your reading Journey")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(Color("darkbrown"))
-                    .multilineTextAlignment(.center)
+                    Text("Add some books so you can get started")
+                        .font(.system(size: 15))
+                        .foregroundColor(Color("gray"))
+                        .multilineTextAlignment(.center)
+                }
 
-                Text("Add some books so you can get started")
-                    .font(.system(size: 15))
-                    .foregroundColor(Color("gray"))
-                    .multilineTextAlignment(.center)
+                Button { showActionSheet = true } label: {
+                    Text("Add Book")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(Color(hex: "6B4C30"))
+                        .clipShape(Capsule())
+                }
+                .confirmationDialog("", isPresented: $showActionSheet, titleVisibility: .hidden) {
+                    Button("Search for a Book") { onAddBook() }
+                    Button("Add Manually") { onAddManual() }
+                    Button("Cancel", role: .cancel) { }
+                }
             }
-
-            Button { showActionSheet = true } label: {
-                Text("Add Book")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 280, height: 56)
-                    .background(Color(hex: "6B4C30"))
-                    .clipShape(Capsule())
-            }
-            .confirmationDialog("", isPresented: $showActionSheet, titleVisibility: .hidden) {
-                Button("Search for a Book") { onAddBook() }
-                Button("Add Manually") { onAddManual() }
-                Button("Cancel", role: .cancel) { }
-            }
+            .padding(.horizontal, 20)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .center)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 20)
     }
 }
 
@@ -358,11 +383,16 @@ struct SkeletonRecommendedScrollView: View {
 
 struct HomeRecommendedScrollView: View {
     let books: [GoogleBook]
+    // ── callback للهوم ──────────────────────────────────
+    var onBookTap: (GoogleBook) -> Void
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
                 ForEach(books) { book in
-                    HomeRecommendedBookCard(book: book)
+                    HomeRecommendedBookCard(book: book) {
+                        onBookTap(book)
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -371,30 +401,34 @@ struct HomeRecommendedScrollView: View {
 }
 
 struct HomeRecommendedBookCard: View {
-    let book: GoogleBook
+    let book:  GoogleBook
+    var onTap: () -> Void        // ── action عند الضغط ──
 
     private let cardW: CGFloat = 95
     private let cardH: CGFloat = 135
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            coverView
-                .frame(width: cardW, height: cardH)
-                .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
+        Button { onTap() } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                coverView
+                    .frame(width: cardW, height: cardH)
+                    .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
 
-            Text(book.title)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(Color("darkbrown"))
-                .lineLimit(2)
-                .frame(width: cardW, height: 32, alignment: .topLeading)
+                Text(book.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(Color("darkbrown"))
+                    .lineLimit(2)
+                    .frame(width: cardW, height: 32, alignment: .topLeading)
 
-            Text(book.author)
-                .font(.system(size: 11))
-                .foregroundColor(Color("gray"))
-                .lineLimit(1)
-                .frame(width: cardW, alignment: .leading)
+                Text(book.author)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color("gray"))
+                    .lineLimit(1)
+                    .frame(width: cardW, alignment: .leading)
+            }
+            .frame(width: cardW)
         }
-        .frame(width: cardW)
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
