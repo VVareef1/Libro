@@ -38,7 +38,11 @@ struct LibroApp: App {
 
     var body: some Scene {
         WindowGroup {
+<<<<<<< HEAD
             SplashView()
+=======
+            ContentView1()
+>>>>>>> main
         }
         .modelContainer(sharedModelContainer)
     }

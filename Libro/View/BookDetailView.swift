@@ -47,7 +47,7 @@ struct BookDetailView: View {
 
                        // ── الاسم ───────────────────────────────────────
                        Text(book.bookName ?? "")
-                           .font(.title2).fontWeight(.bold)
+                           .font(.title2).fontWeight(.bold).foregroundColor(Color("darkbrown"))
                            .multilineTextAlignment(.center)
 
                        // ── التقييم ─────────────────────────────────────
@@ -55,7 +55,7 @@ struct BookDetailView: View {
                            HStack(spacing: 6) {
                                ForEach(1...5, id: \.self) { i in
                                    Image(systemName: Float(i) <= rate ? "star.fill" : "star")
-                                       .foregroundStyle(Float(i) <= rate ? Color("darkbrown") : Color.gray.opacity(0.4))
+                                       .foregroundStyle(Float(i) <= rate ? Color("buttons") : Color.gray.opacity(0.4))
                                        .font(.title3)
                                }
                            }
@@ -65,9 +65,10 @@ struct BookDetailView: View {
                        HStack(spacing: 0) {
                            VStack(spacing: 4) {
                                Text(latestSessionDate)
-                                   .font(.title3).fontWeight(.semibold)
+                                   .font(.title3).foregroundColor(Color("darkbrown"))
                                Text("DATE")
-                                   .font(.caption2).foregroundStyle(.secondary)
+                                   .font(.caption2).foregroundColor(Color("gray"))
+
                                    .kerning(1.5)
                            }
                            .frame(maxWidth: .infinity)
@@ -78,9 +79,11 @@ struct BookDetailView: View {
 
                            VStack(spacing: 4) {
                                Text(totalDuration)
-                                   .font(.title3).fontWeight(.semibold)
+                                   .font(.title3).foregroundColor(Color("darkbrown"))
+                                   .fontWeight(.semibold)
                                Text("DURATION")
-                                   .font(.caption2).foregroundStyle(.secondary)
+                                   .font(.caption2)  .foregroundColor(Color("gray"))
+
                                    .kerning(1.5)
                            }
                            .frame(maxWidth: .infinity)
@@ -95,6 +98,8 @@ struct BookDetailView: View {
                                .frame(maxWidth: .infinity, alignment: .leading)
                                .background(Color.white.opacity(0.6))
                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                               .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 16))
+
                        }
 
                        // ── زر Journey ──────────────────────────────────
@@ -104,8 +109,8 @@ struct BookDetailView: View {
                                .foregroundStyle(.white)
                                .frame(maxWidth: .infinity)
                                .padding(.vertical, 18)
-                               .background(Color("darkbrown"))
-                               .clipShape(Capsule())
+                               .background(Color("buttons"))
+                               .clipShape(Capsule()).glassEffect()
                        }
                    }
                    .padding(24)
@@ -118,7 +123,6 @@ struct BookDetailView: View {
                        Image(systemName: "chevron.left")
                            .fontWeight(.medium)
                            .padding(10)
-                           .background(Color.white.opacity(0.8))
                            .clipShape(Circle())
                    }
                    .tint(.primary)
@@ -128,7 +132,6 @@ struct BookDetailView: View {
                        Image(systemName: "square.and.arrow.up")
                            .fontWeight(.medium)
                            .padding(10)
-                           .background(Color.white.opacity(0.8))
                            .clipShape(Circle())
                    }
                    .tint(.primary)

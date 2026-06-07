@@ -18,7 +18,8 @@ struct RecommendationView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
-            Text("Books picked for you")                .font(.system(size: 26, weight: .bold))
+            Text("Books picked for you")
+                .font(.system(size: 26, weight: .bold))
                 .foregroundColor(Color("darkbrown"))
                 .padding(.horizontal, 24)
                 .padding(.top, 52)
@@ -32,23 +33,33 @@ struct RecommendationView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 28) {
 
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 40)
+                    // القسم الأول
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Recommended for you")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(Color("darkbrown"))
+                            .padding(.horizontal, 24)
+
+                        if viewModel.isLoading {
+                            SkeletonBooksRow()
+                        } else {
+                            BooksRow(books: viewModel.recommendedBooks, selectedBook: $selectedBook)
+                        }
                     }
 
-                    BookSection(
-                        title: "Recommended for you",
-                        books: viewModel.recommendedBooks,
-                        selectedBook: $selectedBook
-                    )
+                    // القسم الثاني
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("More Books you might like")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(Color("darkbrown"))
+                            .padding(.horizontal, 24)
 
-                    BookSection(
-                        title: "More Books you might like",
-                        books: viewModel.moreBooks,
-                        selectedBook: $selectedBook
-                    )
+                        if viewModel.isLoading {
+                            SkeletonBooksRow()
+                        } else {
+                            BooksRow(books: viewModel.moreBooks, selectedBook: $selectedBook)
+                        }
+                    }
                 }
                 .padding(.top, 32)
                 .padding(.bottom, 24)
@@ -93,35 +104,75 @@ struct RecommendationView: View {
     }
 }
 
-struct BookSection: View {
-    let title: String
+// MARK: - Books Row (الحقيقية - بدون عنوان)
+
+struct BooksRow: View {
     let books: [GoogleBook]
     @Binding var selectedBook: GoogleBook?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(title)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(Color("darkbrown"))
-                .padding(.horizontal, 24)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(books) { book in
-                        BookCard(
-                            book: book,
-                            isSelected: selectedBook?.id == book.id
-                        ) {
-                            selectedBook = book
-                        }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 14) {
+                ForEach(books) { book in
+                    BookCard(
+                        book: book,
+                        isSelected: selectedBook?.id == book.id
+                    ) {
+                        selectedBook = book
                     }
                 }
-                .padding(.leading, 24)
-                .padding(.trailing, 24)
             }
+            .padding(.leading, 24)
+            .padding(.trailing, 24)
         }
     }
 }
+
+// MARK: - Skeleton Books Row (بدون عنوان)
+
+struct SkeletonBooksRow: View {
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 14) {
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonBookCardLarge()
+                }
+            }
+            .padding(.leading, 24)
+            .padding(.trailing, 24)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Skeleton Book Card (بنفس حجم BookCard)
+
+struct SkeletonBookCardLarge: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+
+            // غلاف الكتاب
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(hex: "E0D5C8"))
+                .frame(width: 100, height: 140)
+                .shimmer()
+
+            // اسم الكتاب
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hex: "E0D5C8"))
+                .frame(width: 80, height: 11)
+                .shimmer()
+
+            // اسم المؤلف
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hex: "E0D5C8"))
+                .frame(width: 55, height: 10)
+                .shimmer()
+        }
+    }
+}
+
+// MARK: - Book Card
 
 struct BookCard: View {
     let book: GoogleBook
@@ -177,9 +228,7 @@ struct BookCard: View {
                 .padding(7)
             }
             .clipShape(RoundedRectangle(cornerRadius: 10))
-            .onTapGesture {
-                onTap()
-            }
+            .onTapGesture { onTap() }
 
             Text(book.title)
                 .font(.system(size: 12, weight: .medium))
@@ -211,7 +260,5 @@ extension Color {
 }
 
 #Preview {
-    RecommendationView(selectedCategories: ["Fantasy"]) { selectedBook in
-        
-    }
+    RecommendationView(selectedCategories: ["Fantasy"]) { selectedBook in }
 }
