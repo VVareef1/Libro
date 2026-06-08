@@ -6,8 +6,8 @@
 //
 
 import SwiftUI
+import SwiftData
 import Combine
-
 
 @MainActor
 final class ReflectionViewModel: ObservableObject {
@@ -16,6 +16,14 @@ final class ReflectionViewModel: ObservableObject {
     @Published var reflection: String = ""
     @Published var didSubmit: Bool = false
     @Published var didSkip: Bool = false
+
+    private var book: Book?
+    private var modelContext: ModelContext?
+
+    init(book: Book? = nil, modelContext: ModelContext? = nil) {
+        self.book = book
+        self.modelContext = modelContext
+    }
 
     var isReflectionEmpty: Bool {
         reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -33,10 +41,22 @@ final class ReflectionViewModel: ObservableObject {
 
     func submitJourney() {
         guard canSubmit else { return }
+
+        if let book, let modelContext {
+            book.bookRate = Float(rating)
+            book.reflection = reflection.trimmingCharacters(in: .whitespacesAndNewlines)
+            try? modelContext.save()
+        }
+
         didSubmit = true
     }
 
     func skip() {
         didSkip = true
     }
+    
+    func updateContext(_ context: ModelContext) {
+        self.modelContext = context
+    }
+
 }

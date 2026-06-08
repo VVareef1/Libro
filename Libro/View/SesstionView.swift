@@ -99,7 +99,7 @@ struct CandleTimerView: View {
                         BookSessionView1(session: session, book: book)
                     }
                 case .congrats:
-                    CongratulationView()
+                    CongratulationView(book: book)
                 }
             }
             .alert("End Session?", isPresented: $showEndConfirmation) {

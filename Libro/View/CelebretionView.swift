@@ -6,68 +6,86 @@
 //
 
 import SwiftUI
-
+import SwiftData
 
 struct CongratulationView: View {
 
+    let book: Book
+
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = CongratulationViewModel()
+    @State private var navigateToReflection = false
+    @State private var navigateToHome = false
+
+    @Query private var users: [User]
+    private var userIconName: String {
+        users.first?.userIcon ?? "avatar3"
+    }
 
     private let accentBrown = Color(red: 0.56, green: 0.42, blue: 0.28)
 
     var body: some View {
-        ZStack {
+        NavigationStack {
+            ZStack {
+                Color("background")
+                    .ignoresSafeArea()
 
-            Color("background")
-                .ignoresSafeArea()
+                ConfettiLayer(pieces: viewModel.pieces, animating: viewModel.animating)
 
-            ConfettiLayer(pieces: viewModel.pieces, animating: viewModel.animating)
+                VStack(spacing: 0) {
 
-            VStack(spacing: 0) {
+                    Spacer()
 
-                Spacer()
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: "EDE8E3"))
+                            .frame(width: 161, height: 161)
 
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.85))
-                        .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 4)
-                        .glassEffect()
-                        .frame(width: 161, height: 161)
+                        Image(userIconName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 280, height: 280)
+                    }
 
-                    Image("uIcon")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 115, height: 115)
-//                        .foregroundColor(Color(red: 0.75, green: 0.55, blue: 0.40))
+                    Text("Congratulations!")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(Color(UIColor.label))
+                        .padding(.top, 20)
+
+                    Spacer()
+
+                    VStack(spacing: 12) {
+                        Button(action: { navigateToReflection = true }) {
+                            Text("Reflect")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 54)
+                                .background(accentBrown)
+                                .cornerRadius(27)
+                        }
+
+                        Button(action: { navigateToHome = true }) {
+                            Text("Skip")
+                                .font(.system(size: 16, weight: .regular))
+                                .foregroundColor(Color(UIColor.secondaryLabel))
+                        }
+                    }
+                    .padding(.horizontal, 44)
+                    .padding(.bottom, 44)
                 }
-
-                Text("Congratulation")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(Color(UIColor.label))
-                    .padding(.top, 20)
-
-                Spacer()
-
-                Button(action: { viewModel.tapDone() }) {
-                    Text("Reflicte")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(accentBrown)
-                        .cornerRadius(27)
-                        .glassEffect()
-                }
-                .padding(.horizontal, 44)
-                .padding(.bottom, 44)
             }
-        }
-        .navigationBarHidden(true)
-        .onAppear {
-            viewModel.startAnimation()
-        }
-        .onChange(of: viewModel.didTapDone) { _, done in
-            if done { dismiss() }
+            .navigationBarHidden(true)
+            .navigationDestination(isPresented: $navigateToReflection) {
+                ReflectionView(book: book)
+            }
+            .navigationDestination(isPresented: $navigateToHome) {
+                HomeView()
+                    .navigationBarBackButtonHidden(true)
+            }
+            .onAppear {
+                viewModel.startAnimation()
+            }
         }
     }
 }
@@ -112,7 +130,7 @@ struct ConfettiPieceView: View {
             .onAppear {
                 guard animating else { return }
                 let duration = Double.random(in: 2.5...4.5)
-                let delay = Double.random(in: 0...1.5)
+                let delay = Double.random(in: 0...0.5)
 
                 withAnimation(
                     Animation.easeIn(duration: duration).delay(delay)
@@ -143,5 +161,8 @@ struct ConfettiPieceView: View {
 
 
 #Preview {
-    CongratulationView()
+    let book = Book(bookName: "Atomic Habits", bookImage: "", bookGoal: "Pages:30",
+                    reflection: "", bookRate: 0, status: "reading", totalPages: 320)
+    CongratulationView(book: book)
+        .modelContainer(for: [User.self, Book.self], inMemory: true)
 }
