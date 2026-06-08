@@ -36,22 +36,22 @@ struct ContentView1: View {
                     modelContext.insert(book3)
                     try? modelContext.save()
                     
-                    
-                    let s1 = Session(timer: 0, date: makeDate(12, 1, 2026), duration: 1800, stoppedPage: 12, quote: "Lorem ipsum dolor sit amet. Consectetur adipiscing elit.", quotePageNumber: 12)
-                    let s2 = Session(timer: 0, date: makeDate(12, 1, 2026), duration: 1800, stoppedPage: 20, quote: "Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.", quotePageNumber: 20)
-                    let s3 = Session(timer: 0, date: makeDate(10, 1, 2026), duration: 1800, stoppedPage: 35, quote: "Lorem ipsum dolor sit amet consectetur.", quotePageNumber: 35)
-                    let s4 = Session(timer: 0, date: makeDate(2, 1, 2026), duration: 1800, stoppedPage: 50, quote: "Adipiscing elit sed do eiusmod tempor.", quotePageNumber: 50)
-
-                    s1.book = book1
-                    s2.book = book1
-                    s3.book = book1
-                    s4.book = book1
-
-                    modelContext.insert(s1)
-                    modelContext.insert(s2)
-                    modelContext.insert(s3)
-                    modelContext.insert(s4)
-                    
+//                    
+//                    let s1 = Session(timer: 0, date: makeDate(12, 1, 2026), duration: 1800, stoppedPage: 12, quote: "Lorem ipsum dolor sit amet. Consectetur adipiscing elit.", quotePageNumber: 12)
+//                    let s2 = Session(timer: 0, date: makeDate(12, 1, 2026), duration: 1800, stoppedPage: 20, quote: "Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.Consecteturgfhdhgfhdgfhfghg adipiscing elit Lorem ipsum dolor sit amet.", quotePageNumber: 20)
+//                    let s3 = Session(timer: 0, date: makeDate(10, 1, 2026), duration: 1800, stoppedPage: 35, quote: "Lorem ipsum dolor sit amet consectetur.", quotePageNumber: 35)
+//                    let s4 = Session(timer: 0, date: makeDate(2, 1, 2026), duration: 1800, stoppedPage: 50, quote: "Adipiscing elit sed do eiusmod tempor.", quotePageNumber: 50)
+//
+//                    s1.book = book1
+//                    s2.book = book1
+//                    s3.book = book1
+//                    s4.book = book1
+//
+//                    modelContext.insert(s1)
+//                    modelContext.insert(s2)
+//                    modelContext.insert(s3)
+//                    modelContext.insert(s4)
+//                    
                 
                     
                 }

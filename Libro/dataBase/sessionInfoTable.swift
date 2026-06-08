@@ -10,13 +10,12 @@ final class Session {
     var date: Date?
     var duration: Int?
     var stoppedPage: Int?
-    var quote: String?
-    var quotePageNumber: Int?
- 
+    var quote: [String]? = []     // ← array
+    var quotePageNumber: [Int]? = []  // ← array للصفحات
     var book: Book?
- 
+
     init(timer: Int, date: Date, duration: Int,
-         stoppedPage: Int, quote: String, quotePageNumber: Int) {
+         stoppedPage: Int, quote: [String], quotePageNumber: [Int]) {
         self.timer           = timer
         self.date            = date
         self.duration        = duration

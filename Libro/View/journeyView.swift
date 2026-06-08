@@ -9,32 +9,11 @@ struct JourneyView: View {
     let book: Book
     @Environment(\.dismiss) private var dismiss
 
-    private var groupedSessions: [(String, [Session])] {
-        guard let sessions = book.sessions else { return [] }
-        let sorted = sessions
+    // كل سيشن = عنصر منفصل في الـ timeline بغض النظر عن التاريخ
+    private var sortedSessions: [Session] {
+        (book.sessions ?? [])
             .filter { $0.date != nil }
             .sorted { ($0.date ?? .now) > ($1.date ?? .now) }
-
-        var groups: [(String, [Session])] = []
-        var currentKey = ""
-        var currentGroup: [Session] = []
-
-        for session in sorted {
-            let key = dateKey(session.date ?? .now)
-            if key == currentKey {
-                currentGroup.append(session)
-            } else {
-                if !currentGroup.isEmpty {
-                    groups.append((currentKey, currentGroup))
-                }
-                currentKey = key
-                currentGroup = [session]
-            }
-        }
-        if !currentGroup.isEmpty {
-            groups.append((currentKey, currentGroup))
-        }
-        return groups
     }
 
     var body: some View {
@@ -42,17 +21,17 @@ struct JourneyView: View {
             ZStack {
                 Color("background").ignoresSafeArea()
 
-                if groupedSessions.isEmpty {
+                if sortedSessions.isEmpty {
                     Text("No sessions available")
                         .foregroundStyle(.secondary)
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array(groupedSessions.enumerated()), id: \.offset) { index, group in
-                                TimelineGroup(
-                                    dateLabel: group.0,
-                                    sessions: group.1,
-                                    isFirst: index == 0
+                            ForEach(Array(sortedSessions.enumerated()), id: \.offset) { index, session in
+                                SessionTimelineRow(
+                                    session: session,
+                                    isFirst: index == 0,
+                                    isLast: index == sortedSessions.count - 1
                                 )
                             }
                         }
@@ -62,103 +41,62 @@ struct JourneyView: View {
                     }
                 }
             }
-            .navigationTitle(book.bookName ?? "").foregroundColor(Color("darkbrown"))
+            .navigationTitle(book.bookName ?? "")
             .navigationBarTitleDisplayMode(.inline)
-//            .toolbar {
-//                ToolbarItem(placement: .navigationBarLeading) {
-//                    Button { dismiss() } label: {
-//                        Image(systemName: "chevron.left")
-//                            .fontWeight(.medium)
-//                            .padding(10)
-//                            .background(Color.white.opacity(0.8))
-//                            .clipShape(Circle())
-//                    }
-//                    .tint(.primary)
-//                }
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    Button {} label: {
-//                        Image(systemName: "line.3.horizontal")
-//                            .fontWeight(.medium)
-//                            .padding(10)
-//                            .background(Color.white.opacity(0.8))
-//                            .clipShape(Circle())
-//                    }
-//                    .tint(.primary)
-//                }
-//            }
         }
-    }
-
-    private func dateKey(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "d MMM yyyy"
-        return f.string(from: date)
     }
 }
 
-// MARK: - TimelineGroup
+// MARK: - SessionTimelineRow (كل سيشن = صف في الـ timeline)
 
-struct TimelineGroup: View {
-    let dateLabel: String
-    let sessions: [Session]
+struct SessionTimelineRow: View {
+    let session: Session
     let isFirst: Bool
+    let isLast: Bool
+    
+    
+    private func formatDuration(_ seconds: Int) -> String {
+        let hours   = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours > 0 { return "\(hours)h \(minutes)m" }
+        return "\(minutes)m"
+    }
+    
+
+    private var dateLabel: String {
+        let f = DateFormatter()
+        f.dateFormat = "d MMM yyyy"
+        return f.string(from: session.date ?? .now)
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
+
+            // الخط والنقطة
             VStack(spacing: 0) {
                 Circle()
-                    .fill(Color("darkbrown"))
+                    .fill(isFirst ? Color("darkbrown") : Color.gray.opacity(0.4))
                     .frame(width: 18, height: 18)
 
-                Rectangle()
-                    .fill(Color(.gray.opacity(0.25)))
-                    .frame(width: 2)
-                    .frame(maxHeight: .infinity)
+                if !isLast {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.25))
+                        .frame(width: 2)
+                        .frame(maxHeight: .infinity)
+                }
             }
             .padding(.top, 4)
 
+            // المحتوى
             VStack(alignment: .leading, spacing: 12) {
+
+                // التاريخ
                 Text(dateLabel)
-                    .font(.title3).foregroundColor(Color("darkbrown")).fontWeight(.semibold)
+                    .font(.title3).fontWeight(.semibold)
+                    .foregroundColor(Color("darkbrown"))
                     .padding(.bottom, 4)
-
-                ForEach(sessions) { session in
-                    SessionCard(session: session)
-                }
-
-                Spacer().frame(height: 24)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
-
-// MARK: - SessionCard
-
-struct SessionCard: View {
-    let session: Session
-    @State private var isExpanded = false
-
-    var body: some View {
-        ZStack {
-            // الكارد
-            VStack(alignment: .leading, spacing: 12) {
-
-                // الاقتباس
-                if let quote = session.quote, !quote.isEmpty {
-                    Text(quote)
-                        .font(.body)
-                        .foregroundColor(Color("darkbrown"))
-                        .lineSpacing(4)
-                        .lineLimit(isExpanded ? nil : 2)  // ← 2 سطر فقط أو كامل
-                        .truncationMode(.tail)
-                } else {
-                    Text("No quote")
-                        .font(.body)
-                        .foregroundStyle(.tertiary)
-                }
-
-                // المدة والصفحة
+                
+                
                 HStack(spacing: 8) {
                     if let duration = session.duration, duration > 0 {
                         HStack(spacing: 4) {
@@ -168,8 +106,81 @@ struct SessionCard: View {
                         .foregroundColor(Color("gray"))
                         Text("•").foregroundColor(Color("gray")).font(.caption)
                     }
-
                     if let page = session.stoppedPage, page > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "bookmark").font(.caption)
+                            Text("page \(page)").font(.caption)
+                        }
+                        .foregroundColor(Color("gray"))
+                    }
+                }
+                .padding(.bottom, 8)
+                
+                
+                // كارد لكل quote منفصلة
+                let quotes = session.quote ?? []
+                let pages  = session.quotePageNumber ?? []
+
+                if quotes.isEmpty {
+                    QuoteCard(
+                        quote: "",
+                        page: session.stoppedPage ?? 0,
+                        duration: session.duration ?? 0
+                    )
+                } else {
+                    ForEach(Array(quotes.enumerated()), id: \.offset) { index, quote in
+                        QuoteCard(
+                            quote: quote,
+                            page: index < pages.count ? pages[index] : (session.stoppedPage ?? 0),
+                            duration:  0  // المدة بس بالكارد الأولى
+                        )
+                    }
+                }
+
+                Spacer().frame(height: 24)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+// MARK: - QuoteCard (كارد لكل quote)
+
+struct QuoteCard: View {
+    let quote: String
+    let page: Int
+    let duration: Int
+
+    @State private var isExpanded = false
+
+    var body: some View {
+        ZStack {
+            // الكارد العادي
+            VStack(alignment: .leading, spacing: 12) {
+                if !quote.isEmpty {
+                    Text(quote)
+                        .font(.body)
+                        .foregroundColor(Color("darkbrown"))
+                        .lineSpacing(4)
+                        .lineLimit(isExpanded ? nil : 2)
+                        .truncationMode(.tail)
+                } else {
+                    Text("No quote")
+                        .font(.body)
+                        .foregroundStyle(.tertiary)
+                }
+
+                HStack(spacing: 8) {
+                    if duration > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock").font(.caption)
+                            Text(formatDuration(duration)).font(.caption)
+                        }
+                        .foregroundColor(Color("gray"))
+                        Text("•").foregroundColor(Color("gray")).font(.caption)
+                    }
+
+                    if page > 0 {
                         HStack(spacing: 4) {
                             Image(systemName: "bookmark").font(.caption)
                             Text("page \(page)").font(.caption)
@@ -178,10 +189,10 @@ struct SessionCard: View {
                     }
 
                     Spacer()
-
                 }
             }
             .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.white.opacity(0.7))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 14))
@@ -191,10 +202,9 @@ struct SessionCard: View {
                 }
             }
 
-            // Blur overlay لما يتوسع
+            // Blur + كارد موسّع
             if isExpanded {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(.ultraThinMaterial)
+                Color.black.opacity(0.01)
                     .ignoresSafeArea()
                     .onTapGesture {
                         withAnimation(.spring(duration: 0.3)) {
@@ -202,9 +212,8 @@ struct SessionCard: View {
                         }
                     }
 
-                // الكارد الكبير فوق الـ blur
                 VStack(alignment: .leading, spacing: 16) {
-                    if let quote = session.quote, !quote.isEmpty {
+                    if !quote.isEmpty {
                         Text(quote)
                             .font(.body)
                             .foregroundColor(Color("darkbrown"))
@@ -213,7 +222,7 @@ struct SessionCard: View {
                     }
 
                     HStack(spacing: 8) {
-                        if let duration = session.duration, duration > 0 {
+                        if duration > 0 {
                             HStack(spacing: 4) {
                                 Image(systemName: "clock").font(.caption)
                                 Text(formatDuration(duration)).font(.caption)
@@ -221,7 +230,7 @@ struct SessionCard: View {
                             .foregroundColor(Color("gray"))
                             Text("•").foregroundColor(Color("gray")).font(.caption)
                         }
-                        if let page = session.stoppedPage, page > 0 {
+                        if page > 0 {
                             HStack(spacing: 4) {
                                 Image(systemName: "bookmark").font(.caption)
                                 Text("page \(page)").font(.caption)
@@ -234,8 +243,6 @@ struct SessionCard: View {
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 16))
-
-              //  .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 8)
                 .padding(.horizontal, 8)
                 .onTapGesture {
                     withAnimation(.spring(duration: 0.3)) {
@@ -247,7 +254,7 @@ struct SessionCard: View {
     }
 
     private func formatDuration(_ seconds: Int) -> String {
-        let hours = seconds / 3600
+        let hours   = seconds / 3600
         let minutes = (seconds % 3600) / 60
         if hours > 0 { return "\(hours)h \(minutes)m" }
         return "\(minutes)m"
