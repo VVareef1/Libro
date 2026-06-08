@@ -6,13 +6,22 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ReflectionView: View {
 
+    let book: Book?
+
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = ReflectionViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @StateObject private var viewModel: ReflectionViewModel
 
     private let accentBrown = Color(red: 0.56, green: 0.42, blue: 0.28)
+
+    init(book: Book? = nil) {
+        self.book = book
+        _viewModel = StateObject(wrappedValue: ReflectionViewModel(book: book))
+    }
 
     var body: some View {
         ZStack {
@@ -83,6 +92,9 @@ struct ReflectionView: View {
             }
             .background(Color("background").ignoresSafeArea())
             .navigationBarHidden(true)
+            .onAppear {
+                viewModel.updateContext(modelContext)
+            }
             .onChange(of: viewModel.didSubmit) { _, submitted in
                 if submitted { dismiss() }
             }
@@ -145,5 +157,5 @@ struct ReflectionEditorView: View {
 }
 
 #Preview {
-    ReflectionView()
+    ReflectionView(book: nil)
 }

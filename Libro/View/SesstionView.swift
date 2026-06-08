@@ -106,7 +106,7 @@ struct CandleTimerView: View {
                         bookPages: book.totalPages
                     )
                 case .congrats:
-                    CongratulationView()
+                    CongratulationView(book: book)
                 }
             }
             .alert("End Session?", isPresented: $showEndConfirmation) {
