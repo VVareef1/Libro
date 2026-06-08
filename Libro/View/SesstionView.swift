@@ -85,6 +85,8 @@ struct CandleTimerView: View {
             .toolbarBackground(Color(red: 0.97, green: 0.95, blue: 0.91), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .onAppear { viewModel.onAppear() }
+
+            // ── NoteSheet ────────────────────────────────────────────
             .sheet(isPresented: $viewModel.showNoteSheet) {
                 NoteSheetView(viewModel: viewModel)
                     .presentationDetents([.height(420)])
@@ -92,6 +94,37 @@ struct CandleTimerView: View {
                     .presentationCornerRadius(24)
                     .interactiveDismissDisabled()
             }
+
+            // ── كاميرا الـ OCR — تفتح من هنا مباشرة بدل الشيت ───────
+            .fullScreenCover(isPresented: $viewModel.showCameraForOCR) {
+                CameraView { cropped, _ in
+                    viewModel.showCameraForOCR = false
+                    Task {
+                        let ocrService = OCRService()
+                        if let extracted = try? await ocrService.recognizeText(in: cropped) {
+                            await MainActor.run {
+                                viewModel.ocrText = extracted
+                                // ارجع للشيت مع النص
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    viewModel.showNoteSheet = true
+                                }
+                            }
+                        } else {
+                            await MainActor.run {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    viewModel.showNoteSheet = true
+                                }
+                            }
+                        }
+                    }
+                } onCancel: {
+                    viewModel.showCameraForOCR = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        viewModel.showNoteSheet = true
+                    }
+                }
+            }
+
             .navigationDestination(item: $navDestination) { destination in
                 switch destination {
                 case .summary:
@@ -148,14 +181,13 @@ struct CandleTimerView: View {
             date:            Date(),
             duration:        viewModel.elapsedSeconds,
             stoppedPage:     page,
-            quote:           viewModel.notes.map { $0.text },   // ← كل الكوتس
-            quotePageNumber: viewModel.notes.map { $0.page }    // ← كل الصفحات
+            quote:           viewModel.notes.map { $0.text },
+            quotePageNumber: viewModel.notes.map { $0.page }
         )
         session.book = book
         book.sessions?.append(session)
         modelContext.insert(session)
 
-        // تحديث البروجرس
         if book.goalType == "Pages", page > 0 {
             book.currentPage = page
         } else if book.goalType == "Time" {
@@ -163,27 +195,20 @@ struct CandleTimerView: View {
             book.currentPage = min(book.currentPage + pagesRead, book.totalPages)
         }
 
-        // لو وصل آخر صفحة
         if book.totalPages > 0 && book.currentPage >= book.totalPages {
             book.status = "finished"
         }
 
-        // تحديث الستريك
-        if goalAchieved() {
-            updateStreak()
-        }
+        if goalAchieved() { updateStreak() }
 
         do {
             try modelContext.save()
-            print("✅ Session saved | progress: \(Int(book.progress * 100))% | streak: \(book.user?.streak ?? 0)")
         } catch {
             print("❌ Error: \(error)")
         }
 
         return session
     }
-
-    // MARK: - هل حقق الهدف؟
 
     private func goalAchieved() -> Bool {
         if book.goalType == "Pages" {
@@ -195,8 +220,6 @@ struct CandleTimerView: View {
         return false
     }
 
-    // MARK: - تحديث الستريك
-
     private func updateStreak() {
         guard let user = book.user else { return }
         let calendar = Calendar.current
@@ -204,9 +227,8 @@ struct CandleTimerView: View {
 
         if let lastDate = user.lastStreakDate {
             let last = calendar.startOfDay(for: lastDate)
-            if last == today {
-                return
-            } else if calendar.dateComponents([.day], from: last, to: today).day == 1 {
+            if last == today { return }
+            else if calendar.dateComponents([.day], from: last, to: today).day == 1 {
                 user.streak = (user.streak ?? 0) + 1
             } else {
                 user.streak = 0

@@ -1,9 +1,6 @@
 //
-//  QoutsSheetView.swift
+//  NoteSheetView.swift
 //  Libro
-//
-//  Created by Eatzaz Hafiz on 05/06/2026.
-//
 
 import SwiftUI
 
@@ -29,9 +26,7 @@ struct NoteSheetView: View {
                         .background(fieldBackground)
                         .clipShape(Circle())
                 }
-
                 Spacer()
-
                 Button(action: { viewModel.addNote(text: text, page: page) }) {
                     Image(systemName: "checkmark")
                         .font(.system(size: 16, weight: .semibold))
@@ -56,28 +51,34 @@ struct NoteSheetView: View {
                         .padding(.top, 10)
                         .padding(.leading, 4)
                 }
+
                 TextEditor(text: $text)
                     .font(.body)
                     .foregroundColor(brown)
                     .frame(height: 120)
                     .scrollContentBackground(.hidden)
 
+                // زر الكاميرا — يغلق الشيت ويفتح الكاميرا من CandleTimerView
                 VStack {
                     Spacer()
-                        HStack {
-                            ZStack{
+                    HStack {
+                        ZStack {
                             Circle()
                                 .frame(width: 35, height: 35)
-                                .foregroundColor(Color(""))
+                                .foregroundColor(Color.clear)
                                 .glassEffect()
-                            Spacer()
-                            Button(action: { /* handle camera */ }) {
+                            Button(action: {
+                                viewModel.showNoteSheet = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    viewModel.showCameraForOCR = true
+                                }
+                            }) {
                                 Image(systemName: "camera")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(brown.opacity(0.6))
-                                
                             }
                         }
+                        Spacer()
                     }
                 }
             }
@@ -89,15 +90,10 @@ struct NoteSheetView: View {
                 Text("Page Number:")
                     .font(.callout.weight(.semibold))
                     .foregroundColor(brown)
-
                 Spacer()
-
                 HStack(spacing: 12) {
                     Button(action: {
-                        if page > 1 {
-                            page -= 1
-                            pageText = "\(page)"
-                        }
+                        if page > 1 { page -= 1; pageText = "\(page)" }
                     }) {
                         Image(systemName: "minus")
                             .font(.system(size: 14, weight: .semibold))
@@ -115,15 +111,10 @@ struct NoteSheetView: View {
                         .background(fieldBackground)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .onChange(of: pageText) { _, newValue in
-                            if let val = Int(newValue), val > 0 {
-                                page = val
-                            }
+                            if let val = Int(newValue), val > 0 { page = val }
                         }
 
-                    Button(action: {
-                        page += 1
-                        pageText = "\(page)"
-                    }) {
+                    Button(action: { page += 1; pageText = "\(page)" }) {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(brown)
@@ -135,10 +126,17 @@ struct NoteSheetView: View {
         }
         .padding(.horizontal, 24)
         .background(background.ignoresSafeArea())
+        .onAppear {
+            // لو في نص من الـ OCR يحطه تلقائياً
+            if !viewModel.ocrText.isEmpty {
+                text = viewModel.ocrText
+                viewModel.ocrText = ""
+            }
+        }
     }
 }
 
 #Preview {
     NoteSheetView(viewModel: CandleTimerViewModel())
-        .presentationDetents([.height(380)])
+        .presentationDetents([.height(420)])
 }

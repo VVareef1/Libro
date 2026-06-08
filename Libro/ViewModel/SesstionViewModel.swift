@@ -1,3 +1,7 @@
+//
+//  CandleTimerViewModel.swift
+//  Libro
+
 import Foundation
 import Combine
 
@@ -7,11 +11,12 @@ final class CandleTimerViewModel: ObservableObject {
     @Published private(set) var formattedTime: String = "00:00:00"
     @Published private(set) var isRunning: Bool = false
     @Published var showNoteSheet: Bool = false
+    @Published var showCameraForOCR: Bool = false   // ← جديد
+    @Published var ocrText: String = ""             // ← جديد
     @Published private(set) var notes: [BookNote] = []
 
     private var model = TimerModel()
     private var timer: DispatchSourceTimer?
-
 
     func onAppear() {
         syncPublished()
@@ -40,7 +45,6 @@ final class CandleTimerViewModel: ObservableObject {
 
     var elapsedSeconds: Int { model.totalSeconds }
 
-
     private func start() {
         stopTimer()
         model.isRunning = true
@@ -50,7 +54,7 @@ final class CandleTimerViewModel: ObservableObject {
         t.schedule(deadline: .now() + 1, repeating: 1.0, leeway: .milliseconds(50))
         t.setEventHandler { [weak self] in
             guard let self else { return }
-            self.model.totalSeconds += 1  
+            self.model.totalSeconds += 1
             self.syncPublished()
         }
         t.resume()
@@ -67,7 +71,6 @@ final class CandleTimerViewModel: ObservableObject {
         timer?.cancel()
         timer = nil
     }
-
 
     private func syncPublished() {
         formattedTime = model.formattedTime
