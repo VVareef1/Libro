@@ -29,15 +29,15 @@ struct HomeHeaderView: View {
         HStack {
             HStack(spacing: 12) {
                 Circle()
-                    .fill(Color(hex: "E8E0D8"))
+                    .fill(Color(hex: "E8E0D8").opacity(0.01))
                     .frame(width: buttonSize, height: buttonSize)
                     .overlay {
                         if let img = userImage {
                             Image(uiImage: img)
                                 .resizable()
                                 .scaledToFill()
-                                .frame(width: buttonSize - 4, height: buttonSize - 4)
-                                .clipShape(Circle())
+                                .frame(width: buttonSize + 10, height: buttonSize + 30)
+                                .clipped()
                         } else {
                             Image(systemName: "person.fill")
                                 .resizable()
@@ -47,6 +47,7 @@ struct HomeHeaderView: View {
                         }
                     }
                     .clipShape(Circle())
+                    .glassEffect(.regular.tint(Color(hex: "E8E0D8").opacity(0.3)), in: Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(greeting)
@@ -61,16 +62,17 @@ struct HomeHeaderView: View {
 
             NavigationLink(destination: LibraryView()) {
                 Circle()
-                    .fill(Color(hex: "E8E0D8"))
+                    .fill(Color(hex: "E8E0D8").opacity(0.01))
                     .frame(width: buttonSize, height: buttonSize)
                     .overlay(
                         Image(systemName: "books.vertical.fill")
                             .resizable()
                             .scaledToFit()
                             .frame(width: iconSize)
-                            .foregroundColor(Color(hex: "78583C").opacity(0.6))
+                            .foregroundColor(Color(hex: "3E2F2A"))
                     )
                     .clipShape(Circle())
+                    .glassEffect(.regular.tint(Color(hex: "E8E0D8").opacity(0.3)), in: Circle())
             }
             .buttonStyle(.plain)
         }
@@ -83,16 +85,20 @@ struct StreakCardView: View {
 
     @Query var users: [User]
 
-    private var streak: Int { users.first?.streak ?? 0 }
+    private var user: User? { users.first }
+    private var streak: Int { user?.streak ?? 0 }
 
-    private var subtitleText: String {
-        streak == 0 ? "Start reading to build your streak!" : "Keep it going!"
+    private var isStreakLost: Bool {
+        guard let last = user?.lastStreakDate else { return false }
+        let cal = Calendar.current
+        return !cal.isDateInToday(last) && !cal.isDateInYesterday(last)
     }
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(hex: "6B4C30"))
+
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
@@ -100,21 +106,49 @@ struct StreakCardView: View {
                         .frame(width: 56, height: 56)
                     Image(systemName: "flame.fill")
                         .font(.system(size: 26))
-                        .foregroundColor(Color(hex: "F5A623"))
+                        .foregroundColor(
+                            isStreakLost
+                                ? Color(hex: "F5A623").opacity(0.35)
+                                : Color(hex: "F5A623")
+                        )
                 }
+
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(streak) Days Streak")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
-                    Text(subtitleText)
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.7))
+                    if isStreakLost {
+                        Text("Streak Lost")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Open a book to start a new streak!")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.7))
+                    } else if streak == 0 {
+                        Text("0 Days Streak")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Start reading to build your streak!")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.7))
+                    } else {
+                        Text("\(streak) Days Streak")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Keep it going!")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
                 }
                 Spacer()
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 22)
         }
+        .onAppear { resetStreakIfNeeded() }
+    }
+
+    private func resetStreakIfNeeded() {
+        guard isStreakLost else { return }
+        user?.streak = 0
+        user?.lastStreakDate = nil
     }
 }
 
@@ -128,13 +162,6 @@ struct SectionHeader: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(Color("darkbrown"))
             Spacer()
-            Button { } label: {
-                HStack(spacing: 2) {
-                    Text("See all").font(.system(size: 14))
-                    Image(systemName: "chevron.right").font(.system(size: 12))
-                }
-                .foregroundColor(Color("gray"))
-            }
         }
     }
 }
@@ -191,6 +218,7 @@ struct EmptyHomeView: View {
 
 struct ContinueReadingCarousel: View {
     let books: [Book]
+    var onBookTap: (Book) -> Void
 
     private let cardWidth: CGFloat = UIScreen.main.bounds.width - 60
     private let spacing:   CGFloat = 14
@@ -199,7 +227,9 @@ struct ContinueReadingCarousel: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: spacing) {
                 ForEach(books) { book in
-                    NavigationLink(destination: CandleTimerView(book: book)) {
+                    Button {
+                        onBookTap(book)
+                    } label: {
                         ContinueReadingCard(book: ReadingBook(
                             title:        book.bookName   ?? "",
                             author:       book.bookAuthor ?? "",
@@ -253,16 +283,29 @@ struct ContinueReadingCard: View {
 
     @ViewBuilder
     private var coverView: some View {
-        if let url = URL(string: book.thumbnailURL ?? "") {
-            AsyncImage(url: url) { phase in
-                if case .success(let image) = phase {
-                    image.resizable().scaledToFill()
-                        .frame(width: 90, height: 120)
-                        .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                } else {
-                    placeholderCover
+        if let urlStr = book.thumbnailURL, !urlStr.isEmpty {
+            if !urlStr.hasPrefix("http"),
+               let data = Data(base64Encoded: urlStr),
+               let img = UIImage(data: data) {
+                Image(uiImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 90, height: 120)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            } else if let url = URL(string: urlStr) {
+                AsyncImage(url: url) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().scaledToFill()
+                            .frame(width: 90, height: 120)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    } else {
+                        placeholderCover
+                    }
                 }
+            } else {
+                placeholderCover
             }
         } else {
             placeholderCover
@@ -291,13 +334,17 @@ struct ContinueReadingCard: View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Color("darkbrown"))
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .minimumScaleFactor(0.8)
                 if !book.author.isEmpty {
                     Text("by \(book.author)")
                         .font(.system(size: 13))
                         .foregroundColor(Color("gray"))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
             }
             Spacer()
@@ -328,7 +375,7 @@ struct ContinueReadingCard: View {
     }
 }
 
-// MARK: - Skeleton
+// MARK: - Shimmer
 
 struct ShimmerModifier: ViewModifier {
     @State private var phase: CGFloat = -1
@@ -383,7 +430,6 @@ struct SkeletonRecommendedScrollView: View {
 
 struct HomeRecommendedScrollView: View {
     let books: [GoogleBook]
-    // ── callback للهوم ──────────────────────────────────
     var onBookTap: (GoogleBook) -> Void
 
     var body: some View {
@@ -402,28 +448,28 @@ struct HomeRecommendedScrollView: View {
 
 struct HomeRecommendedBookCard: View {
     let book:  GoogleBook
-    var onTap: () -> Void       
+    var onTap: () -> Void
 
-    private let cardW: CGFloat = 95
-    private let cardH: CGFloat = 135
+    private let cardW: CGFloat = 105
 
     var body: some View {
         Button { onTap() } label: {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 coverView
-                    .frame(width: cardW, height: cardH)
                     .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
 
                 Text(book.title)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(Color("darkbrown"))
-                    .lineLimit(2)
-                    .frame(width: cardW, height: 32, alignment: .topLeading)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(width: cardW, alignment: .topLeading)
 
                 Text(book.author)
                     .font(.system(size: 11))
                     .foregroundColor(Color("gray"))
                     .lineLimit(1)
+                    .truncationMode(.tail)
                     .frame(width: cardW, alignment: .leading)
             }
             .frame(width: cardW)
@@ -438,18 +484,18 @@ struct HomeRecommendedBookCard: View {
                 switch phase {
                 case .success(let image):
                     image.resizable().scaledToFill()
-                        .frame(width: cardW, height: cardH)
+                        .frame(width: cardW, height: 148)
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 case .empty, .failure:
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(hex: "E0D5C8"))
-                        .frame(width: cardW, height: cardH)
+                        .frame(width: cardW, height: 148)
                         .shimmer()
                 @unknown default:
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(hex: "E0D5C8"))
-                        .frame(width: cardW, height: cardH)
+                        .frame(width: cardW, height: 148)
                         .shimmer()
                 }
             }
@@ -461,7 +507,7 @@ struct HomeRecommendedBookCard: View {
     private var placeholderCover: some View {
         RoundedRectangle(cornerRadius: 12)
             .fill(Color(hex: "C4A96A"))
-            .frame(width: cardW, height: cardH)
+            .frame(width: cardW, height: 148)
             .overlay(
                 VStack {
                     Spacer()

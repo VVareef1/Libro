@@ -35,7 +35,8 @@ struct BookSessionView: View {
                     Text(session.bookName)
                         .font(.system(size: 28, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .foregroundColor(.darkbrown)                        .padding(.top, 16)
+                        .foregroundColor(.darkbrown)
+                        .padding(.top, 16)
                         .padding(.bottom, 32)
 
                     SessionInfoTimeline(
@@ -58,8 +59,16 @@ struct BookSessionView: View {
                 }
             }
 
-            NavigationLink(destination: RecommendationView(selectedCategories: ["Fantasy"]) { _ in
-            }, isActive: $navigateToHome) {
+            // ← الإصلاح هنا
+            NavigationLink(
+                destination: RecommendationView(
+                    selectedCategories: ["Fantasy"],
+                    confirmedBook: nil,
+                    onSelect: { _ in },
+                    onContinue: {}
+                ),
+                isActive: $navigateToHome
+            ) {
                 EmptyView()
             }
         }

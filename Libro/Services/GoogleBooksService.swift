@@ -20,18 +20,32 @@ final class GoogleBooksService {
     }
 
     func searchBooks(query: String) async throws -> [GoogleBook] {
-        let books = try await fetchBooksForQuery(query, maxResults: 40)
-        return removeDuplicates(from: books)
+        async let arabicBooks  = fetchBooksForQuery(query, maxResults: 20, language: "ar")
+        async let generalBooks = fetchBooksForQuery(query, maxResults: 40)
+
+        let arabic  = (try? await arabicBooks)  ?? []
+        let general = (try? await generalBooks) ?? []
+
+        let arabicIDs  = Set(arabic.map { $0.id })
+        let otherBooks = general.filter { !arabicIDs.contains($0.id) }
+
+        return removeDuplicates(from: arabic + otherBooks)
     }
 
-    private func fetchBooksForQuery(_ query: String, maxResults: Int = 10) async throws -> [GoogleBook] {
+    private func fetchBooksForQuery(_ query: String, maxResults: Int = 10, language: String? = nil) async throws -> [GoogleBook] {
         var components = URLComponents(string: baseURL)
-        components?.queryItems = [
+        var queryItems = [
             URLQueryItem(name: "q",          value: query),
             URLQueryItem(name: "maxResults", value: "\(maxResults)"),
             URLQueryItem(name: "printType",  value: "books"),
             URLQueryItem(name: "key",        value: apiKey)
         ]
+
+        if let language {
+            queryItems.append(URLQueryItem(name: "langRestrict", value: language))
+        }
+
+        components?.queryItems = queryItems
 
         guard let url = components?.url else { throw URLError(.badURL) }
 
@@ -57,8 +71,8 @@ final class GoogleBooksService {
     }
 
     private func removeDuplicates(from books: [GoogleBook]) -> [GoogleBook] {
-        var seenIDs  = Set<String>()
-        var unique   = [GoogleBook]()
+        var seenIDs = Set<String>()
+        var unique  = [GoogleBook]()
         for book in books {
             if seenIDs.insert(book.id).inserted { unique.append(book) }
         }
@@ -70,3 +84,5 @@ struct GoogleBooksResponse: Decodable { let items: [GoogleBookItem]? }
 struct GoogleBookItem:      Decodable { let id: String; let volumeInfo: VolumeInfo }
 struct VolumeInfo:          Decodable { let title: String?; let authors: [String]?; let pageCount: Int?; let imageLinks: ImageLinks? }
 struct ImageLinks:          Decodable { let thumbnail: String? }
+
+

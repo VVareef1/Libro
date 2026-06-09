@@ -1,14 +1,15 @@
 //
 //  RecommendationView.swift
 //  Libro
-//
 
 import SwiftUI
 
 struct RecommendationView: View {
 
     let selectedCategories: [String]
-    let onContinue: (GoogleBook) -> Void
+    let confirmedBook: GoogleBook?
+    let onSelect: (GoogleBook) -> Void
+    let onContinue: () -> Void
 
     @StateObject private var viewModel = BooksViewModel()
     @State private var selectedBook: GoogleBook?
@@ -22,9 +23,9 @@ struct RecommendationView: View {
                 .font(.system(size: 26, weight: .bold))
                 .foregroundColor(Color("darkbrown"))
                 .padding(.horizontal, 24)
-                .padding(.top, 52)
+                .padding(.top, 16)
 
-            Text("Pick at least 1 to continue")
+            Text("Pick a book to continue")
                 .font(.system(size: 15))
                 .foregroundColor(Color("gray"))
                 .padding(.horizontal, 24)
@@ -42,7 +43,14 @@ struct RecommendationView: View {
                         if viewModel.isLoading {
                             SkeletonBooksRow()
                         } else {
-                            BooksRow(books: viewModel.recommendedBooks, selectedBook: $selectedBook)
+                            BooksRow(
+                                books: viewModel.recommendedBooks,
+                                selectedBook: $selectedBook,
+                                confirmedBook: confirmedBook
+                            ) { book in
+                                selectedBook = book
+                                onSelect(book)
+                            }
                         }
                     }
 
@@ -55,7 +63,14 @@ struct RecommendationView: View {
                         if viewModel.isLoading {
                             SkeletonBooksRow()
                         } else {
-                            BooksRow(books: viewModel.moreBooks, selectedBook: $selectedBook)
+                            BooksRow(
+                                books: viewModel.moreBooks,
+                                selectedBook: $selectedBook,
+                                confirmedBook: confirmedBook
+                            ) { book in
+                                selectedBook = book
+                                onSelect(book)
+                            }
                         }
                     }
                 }
@@ -66,17 +81,15 @@ struct RecommendationView: View {
             Spacer(minLength: 0)
 
             Button {
-                if let selectedBook {
-                    onContinue(selectedBook)
-                }
+                onContinue()
             } label: {
                 Text("Continue")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(selectedBook == nil ? Color("darkbrown").opacity(0.4) : .white)
+                    .foregroundColor(confirmedBook == nil ? Color("darkbrown").opacity(0.4) : .white)
                     .frame(width: 320, height: 58)
                     .background(
                         Group {
-                            if selectedBook == nil {
+                            if confirmedBook == nil {
                                 Capsule().fill(.ultraThinMaterial)
                             } else {
                                 Capsule().fill(checkColor)
@@ -86,12 +99,12 @@ struct RecommendationView: View {
                     .overlay(
                         Capsule()
                             .stroke(
-                                selectedBook == nil ? Color.white.opacity(0.4) : Color.clear,
+                                confirmedBook == nil ? Color.white.opacity(0.4) : Color.clear,
                                 lineWidth: 0.5
                             )
                     )
             }
-            .disabled(selectedBook == nil)
+            .disabled(confirmedBook == nil)
             .frame(maxWidth: .infinity)
             .padding(.bottom, 34)
         }
@@ -107,6 +120,8 @@ struct RecommendationView: View {
 struct BooksRow: View {
     let books: [GoogleBook]
     @Binding var selectedBook: GoogleBook?
+    let confirmedBook: GoogleBook?
+    let onTap: (GoogleBook) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -114,9 +129,9 @@ struct BooksRow: View {
                 ForEach(books) { book in
                     BookCard(
                         book: book,
-                        isSelected: selectedBook?.id == book.id
+                        isSelected: confirmedBook?.id == book.id
                     ) {
-                        selectedBook = book
+                        onTap(book)
                     }
                 }
             }
@@ -143,25 +158,21 @@ struct SkeletonBooksRow: View {
     }
 }
 
-// MARK: - Skeleton Book Card (بنفس حجم BookCard)
+// MARK: - Skeleton Book Card
 
 struct SkeletonBookCardLarge: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-
-            // غلاف الكتاب
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(hex: "E0D5C8"))
                 .frame(width: 100, height: 140)
                 .shimmer()
 
-            // اسم الكتاب
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color(hex: "E0D5C8"))
                 .frame(width: 80, height: 11)
                 .shimmer()
 
-            // اسم المؤلف
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color(hex: "E0D5C8"))
                 .frame(width: 55, height: 10)
@@ -258,5 +269,10 @@ extension Color {
 }
 
 #Preview {
-    RecommendationView(selectedCategories: ["Fantasy"]) { selectedBook in }
+    RecommendationView(
+        selectedCategories: ["Fantasy"],
+        confirmedBook: nil,
+        onSelect: { _ in },
+        onContinue: {}
+    )
 }

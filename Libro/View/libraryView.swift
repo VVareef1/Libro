@@ -1,6 +1,7 @@
 //
 //  LibraryView.swift
 //  Libro
+//
 
 import SwiftUI
 import SwiftData
@@ -98,29 +99,29 @@ struct LibraryView: View {
             .sheet(item: $selectedBook) { book in
                 BookDetailView(book: book)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Circle()
-                        .fill(Color(hex: "E8E0D8"))
-                        .frame(width: 40, height: 40)
-                        .overlay {
-                            if let img = userImage {
-                                Image(uiImage: img)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 36, height: 36)
-                                    .clipShape(Circle())
-                            } else {
-                                Image(systemName: "person.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20)
-                                    .foregroundColor(Color(hex: "78583C").opacity(0.6))
-                            }
-                        }
-                        .clipShape(Circle())
-                }
-            }
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Circle()
+//                        .fill(Color(hex: "E8E0D8"))
+//                        .frame(width: 40, height: 40)
+//                        .overlay {
+//                            if let img = userImage {
+//                                Image(uiImage: img)
+//                                    .resizable()
+//                                    .scaledToFill()
+//                                    .frame(width: 36, height: 36)
+//                                    .clipShape(Circle())
+//                            } else {
+//                                Image(systemName: "person.fill")
+//                                    .resizable()
+//                                    .scaledToFit()
+//                                    .frame(width: 20)
+//                                    .foregroundColor(Color(hex: "78583C").opacity(0.6))
+//                            }
+//                        }
+//                        .clipShape(Circle())
+//                }
+//            }
         }
     }
 
@@ -129,7 +130,7 @@ struct LibraryView: View {
     struct BookCover: View {
         let book: Book
 
-        // يحدد نوع الصورة: URL من النت أو base64 محلي
+        // ✅ الإصلاح: يتحقق من نوع الصورة (base64 أو URL)
         private var isRemoteURL: Bool {
             guard let img = book.bookImage else { return false }
             return img.hasPrefix("http://") || img.hasPrefix("https://")
@@ -145,7 +146,7 @@ struct LibraryView: View {
         var body: some View {
             Group {
                 if isRemoteURL, let urlStr = book.bookImage, let url = URL(string: urlStr) {
-                    // صورة من الإنترنت (كتب السيرش)
+                    // صورة URL من الإنترنت
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
@@ -158,7 +159,7 @@ struct LibraryView: View {
                         }
                     }
                 } else if let img = localImage {
-                    // صورة base64 (كتب يدوية)
+                    // صورة base64 (كتب يدوية أو محفوظة من السيرش)
                     Image(uiImage: img)
                         .resizable()
                         .scaledToFill()

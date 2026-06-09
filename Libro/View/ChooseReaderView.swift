@@ -12,6 +12,7 @@ struct ChooseReaderView: View {
 
     @State private var name           = ""
     @State private var selectedAvatar = 3
+    @FocusState private var nameIsFocused: Bool
 
     @Environment(\.modelContext) private var modelContext
 
@@ -26,16 +27,14 @@ struct ChooseReaderView: View {
                 .font(.system(size: 26, weight: .bold))
                 .foregroundColor(Color("darkbrown"))
 
-            Spacer().frame(height: 52)
+            Spacer().frame(height: 24)
 
             // ── Swipeable Avatar Carousel ─────────────────────────
             AvatarCarousel(
                 avatarOrder:    avatarOrder,
                 selectedAvatar: $selectedAvatar
             )
-            .frame(height: 340)
-
-            Spacer().frame(height: 8)
+            .frame(height: 300)
 
             // ── Name field ────────────────────────────────────────
             VStack(spacing: 0) {
@@ -46,6 +45,7 @@ struct ChooseReaderView: View {
                     .padding(.vertical, 14)
                     .padding(.horizontal, 24)
                     .textInputAutocapitalization(.words)
+                    .focused($nameIsFocused)
 
                 Rectangle()
                     .fill(Color("darkbrown").opacity(0.18))
@@ -53,6 +53,7 @@ struct ChooseReaderView: View {
                     .padding(.horizontal, 24)
             }
             .onTapGesture { }
+
             Spacer()
 
             // ── Continue button ───────────────────────────────────
@@ -75,8 +76,10 @@ struct ChooseReaderView: View {
             }
             .disabled(name.isEmpty)
             .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.bottom, nameIsFocused ? 16 : 48)
         }
+        .animation(.easeInOut(duration: 0.3), value: nameIsFocused)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     // MARK: - Save User
@@ -137,6 +140,8 @@ struct AvatarCarousel: View {
                                             width:  isCenter ? imageCenter : imageSide,
                                             height: isCenter ? imageCenter : imageSide
                                         )
+                                        .scaleEffect(avatarNum == 2 ? 0.85 : 1.0)
+                                        .offset(x: avatarNum == 2 ? -8 : 0, y: avatarNum == 2 ? -10 : 0)
                                 )
                                 .opacity(isCenter ? 1.0 : 0.5)
                                 .scaleEffect(isCenter ? 1.0 : 0.85)

@@ -54,24 +54,25 @@ struct CongratulationView: View {
 
                     Spacer()
 
-                    VStack(spacing: 12) {
+                    VStack(spacing: 16) {
                         Button(action: { navigateToReflection = true }) {
                             Text("Reflect")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.white)
+                                .font(.title3).fontWeight(.semibold)
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .background(accentBrown)
-                                .cornerRadius(27)
+                                .padding(.vertical, 18)
+                                .background(Color("buttons"))
+                                .clipShape(Capsule())
+                                .glassEffect()
                         }
 
                         Button(action: { navigateToHome = true }) {
                             Text("Skip")
-                                .font(.system(size: 16, weight: .regular))
+                                .font(.title3).fontWeight(.semibold)
                                 .foregroundColor(Color(UIColor.secondaryLabel))
                         }
                     }
-                    .padding(.horizontal, 44)
+                    .padding(.horizontal, 24)
                     .padding(.bottom, 44)
                 }
             }

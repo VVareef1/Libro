@@ -27,7 +27,7 @@ struct AddBookManualView: View {
     @State private var minutes    = 30
     @State private var seconds    = 0
 
-    private let brown = Color(hex: "6B4C30")
+    private let brown = Color("darkbrown")
     private var canSave: Bool { !bookName.isEmpty }
 
     var body: some View {
@@ -118,7 +118,7 @@ struct AddBookManualView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Book Info")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Color(.label))
+                            .foregroundStyle(Color("darkbrown"))
                             .padding(.bottom, 10)
                             .padding(.horizontal, 4)
 
@@ -126,6 +126,7 @@ struct AddBookManualView: View {
                             VStack(spacing: 0) {
                                 TextField("Book Name", text: $bookName)
                                     .font(.system(size: 15))
+                                    .foregroundStyle(Color("darkbrown"))
                                     .padding(.horizontal, 18)
                                     .padding(.vertical, 16)
 
@@ -133,6 +134,7 @@ struct AddBookManualView: View {
 
                                 TextField("Author", text: $bookAuthor)
                                     .font(.system(size: 15))
+                                    .foregroundStyle(Color("darkbrown"))
                                     .padding(.horizontal, 18)
                                     .padding(.vertical, 16)
 
@@ -140,6 +142,7 @@ struct AddBookManualView: View {
 
                                 TextField("Total Pages", text: $totalPages)
                                     .font(.system(size: 15))
+                                    .foregroundStyle(Color("darkbrown"))
                                     .keyboardType(.numberPad)
                                     .onChange(of: totalPages) { _, newValue in
                                         totalPages = newValue.filter { $0.isNumber }
@@ -154,7 +157,7 @@ struct AddBookManualView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Reading Goal")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Color(.label))
+                            .foregroundStyle(Color("darkbrown"))
                             .padding(.bottom, 10)
                             .padding(.horizontal, 4)
 
@@ -174,14 +177,14 @@ struct AddBookManualView: View {
                                                 .foregroundStyle(goalType == type ? .white : Color(.secondaryLabel))
                                                 .frame(maxWidth: .infinity)
                                                 .padding(.vertical, 9)
-                                                .background(goalType == type ? brown : Color.clear)
+                                                .background(goalType == type ? Color("buttons") : Color.clear)
                                                 .clipShape(Capsule())
                                         }
                                         .buttonStyle(.plain)
                                     }
                                 }
                                 .padding(4)
-                                .background(brown.opacity(0.1))
+                                .background(Color("buttons").opacity(0.1))
                                 .clipShape(Capsule())
 
                                 ZStack {
@@ -209,7 +212,7 @@ struct AddBookManualView: View {
                                                     )
                                                 Image(systemName: "minus")
                                                     .font(.system(size: 14, weight: .medium))
-                                                    .foregroundStyle(brown)
+                                                    .foregroundStyle(Color("buttons"))
                                             }
                                             .frame(width: 44, height: 44)
                                             .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
@@ -218,7 +221,7 @@ struct AddBookManualView: View {
 
                                         Text("\(dailyPages)")
                                             .font(.system(size: 24, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(Color(hex: "2C1A0E"))
+                                            .foregroundStyle(Color("darkbrown"))
                                             .frame(width: 100)
                                             .frame(height: 44)
                                             .background(.ultraThinMaterial)
@@ -256,7 +259,7 @@ struct AddBookManualView: View {
                                                     )
                                                 Image(systemName: "plus")
                                                     .font(.system(size: 14, weight: .medium))
-                                                    .foregroundStyle(brown)
+                                                    .foregroundStyle(Color("buttons"))
                                             }
                                             .frame(width: 44, height: 44)
                                             .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
@@ -334,7 +337,6 @@ struct AddBookManualView: View {
                 Text("Add Book")
                     .font(.system(size: 17, weight: .semibold))
                 Spacer()
-                // ── Checkmark Save Button ──
                 Button {
                     save()
                     dismiss()
@@ -365,7 +367,7 @@ struct AddBookManualView: View {
     private func glassCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 18)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.6))
             RoundedRectangle(cornerRadius: 18)
                 .strokeBorder(
                     LinearGradient(
@@ -378,11 +380,12 @@ struct AddBookManualView: View {
             content()
         }
         .shadow(color: .black.opacity(0.06), radius: 14, y: 4)
+        .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var cardDivider: some View {
         Rectangle()
-            .fill(brown.opacity(0.12))
+            .fill(Color("darkbrown").opacity(0.12))
             .frame(height: 1)
             .padding(.horizontal, 18)
     }

@@ -12,12 +12,13 @@ struct ReaderSetupFlowView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
 
-    @State private var currentStep:        Int      = 1
-    @State private var selectedCategories: [String] = []
-    @State private var selectedBook:       GoogleBook?
-    @State private var goHome:             Bool     = false
+    @State private var currentStep:        Int         = 1
+    @State private var selectedCategories: [String]    = []
+    @State private var selectedBook:       GoogleBook? = nil
+    @State private var confirmedBook:      GoogleBook? = nil
+    @State private var goHome:             Bool        = false
 
-    private let totalSteps = 4   
+    private let totalSteps = 4
 
     var body: some View {
 
@@ -41,39 +42,62 @@ struct ReaderSetupFlowView: View {
                     switch currentStep {
 
                     case 1:
-                        // ── Step 1: Choose a Reader ──────────────
                         ChooseReaderView {
                             currentStep += 1
                         }
 
                     case 2:
-                        // ── Step 2: Categories ───────────────────
                         CategoryView { categories in
                             selectedCategories = categories
+                            saveCategories(categories)
                             currentStep += 1
                         }
 
                     case 3:
-                        // ── Step 3: Recommendation ───────────────
                         RecommendationView(
-                            selectedCategories: selectedCategories
-                        ) { book in
-                            selectedBook = book
-                            currentStep += 1
-                        }
+                            selectedCategories: selectedCategories,
+                            confirmedBook: confirmedBook,
+                            onSelect: { book in
+                                selectedBook = book
+                            },
+                            onContinue: {
+                                hasCompletedSetup = true
+                                goHome = true
+                            }
+                        )
 
                     default:
                         EmptyView()
                     }
                 }
             }
-            .fullScreenCover(item: $selectedBook) { book in
-                ReadingSetupFlowView(book: book, categories: selectedCategories) {
-                    hasCompletedSetup = true
-                    goHome = true
+            .sheet(item: $selectedBook) { book in
+                BookSearchDetailSheet(googleBook: book) {
+                    confirmedBook = book
+                    selectedBook  = nil
                 }
             }
         }
+    }
+
+    // MARK: - Save Categories
+
+    private func saveCategories(_ categories: [String]) {
+        let descriptor = FetchDescriptor<User>()
+        if let existingUser = try? modelContext.fetch(descriptor).first {
+            // ✅ المستخدم موجود — فقط حدّث التصنيفات
+            existingUser.categories = categories
+        } else {
+            // ✅ أنشئ مستخدم جديد بالتصنيفات
+            let newUser = User(userName: "", userIcon: "", streak: 0)
+            newUser.categories = categories
+            let library = Library(completedBooks: [], wishlistBooks: [])
+            newUser.library = library
+            library.user = newUser
+            modelContext.insert(newUser)
+            modelContext.insert(library)
+        }
+        try? modelContext.save()
     }
 }
 

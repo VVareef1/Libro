@@ -6,8 +6,6 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - BookSearchDetailSheet
-
 struct BookSearchDetailSheet: View {
 
     let googleBook: GoogleBook
@@ -16,41 +14,34 @@ struct BookSearchDetailSheet: View {
     @Environment(\.dismiss)      private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    // Pre-filled from GoogleBook
     @State private var bookName:   String
     @State private var bookAuthor: String
     @State private var totalPages: String = ""
 
-    // Cover loaded async
     @State private var coverImage: UIImage? = nil
     @State private var isLoadingCover = true
 
-    // Reading Goal
     @State private var goalType   = "Pages"
     @State private var dailyPages = 5
     @State private var hours      = 0
     @State private var minutes    = 30
     @State private var seconds    = 0
 
-    private let brown = Color(hex: "6B4C30")
+    private let brown = Color("darkbrown")
     private var canSave: Bool { !bookName.isEmpty }
 
-    // MARK: init
     init(googleBook: GoogleBook, onSave: @escaping () -> Void) {
         self.googleBook = googleBook
         self.onSave     = onSave
         _bookName   = State(initialValue: googleBook.title)
         _bookAuthor = State(initialValue: googleBook.author)
-        // Pre-fill pages from GoogleBook if available
         let pages = googleBook.pageCount ?? 0
         _totalPages = State(initialValue: pages > 0 ? "\(pages)" : "")
     }
 
-    // MARK: Body
     var body: some View {
         ZStack(alignment: .top) {
 
-            // ── Background blobs ─────────────────────────────────
             Color("background").ignoresSafeArea()
 
             Circle()
@@ -71,11 +62,9 @@ struct BookSearchDetailSheet: View {
                 .blur(radius: 55).opacity(0.30)
                 .offset(x: -80, y: 320).ignoresSafeArea()
 
-            // ── Scrollable content ───────────────────────────────
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 24) {
 
-                    // ── Cover ────────────────────────────────────
                     ZStack {
                         if isLoadingCover {
                             RoundedRectangle(cornerRadius: 16)
@@ -97,7 +86,7 @@ struct BookSearchDetailSheet: View {
                                 .overlay(
                                     Image(systemName: "book.closed")
                                         .font(.system(size: 32))
-                                        .foregroundStyle(brown.opacity(0.4))
+                                        .foregroundStyle(Color("darkbrown").opacity(0.4))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
@@ -119,7 +108,7 @@ struct BookSearchDetailSheet: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Book Info")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Color(.label))
+                            .foregroundStyle(Color("darkbrown"))
                             .padding(.bottom, 10)
                             .padding(.horizontal, 4)
 
@@ -127,7 +116,7 @@ struct BookSearchDetailSheet: View {
                             VStack(spacing: 0) {
                                 Text(bookName)
                                     .font(.system(size: 15))
-                                    .foregroundStyle(Color(.label))
+                                    .foregroundStyle(Color("darkbrown"))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 18)
                                     .padding(.vertical, 16)
@@ -136,7 +125,7 @@ struct BookSearchDetailSheet: View {
 
                                 Text(bookAuthor)
                                     .font(.system(size: 15))
-                                    .foregroundStyle(Color(.label))
+                                    .foregroundStyle(Color("darkbrown"))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 18)
                                     .padding(.vertical, 16)
@@ -145,6 +134,7 @@ struct BookSearchDetailSheet: View {
 
                                 TextField("Total Pages", text: $totalPages)
                                     .font(.system(size: 15))
+                                    .foregroundStyle(Color("darkbrown"))
                                     .keyboardType(.numberPad)
                                     .onChange(of: totalPages) { _, newValue in
                                         totalPages = newValue.filter { $0.isNumber }
@@ -155,18 +145,16 @@ struct BookSearchDetailSheet: View {
                         }
                     }
 
-                    // ── Reading Goal ──────────────────────────────
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Reading Goal")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Color(.label))
+                            .foregroundStyle(Color("darkbrown"))
                             .padding(.bottom, 10)
                             .padding(.horizontal, 4)
 
                         glassCard {
                             VStack(spacing: 16) {
 
-                                // Segmented control
                                 HStack(spacing: 0) {
                                     ForEach(["Pages", "Time"], id: \.self) { type in
                                         Button {
@@ -179,19 +167,18 @@ struct BookSearchDetailSheet: View {
                                                 .foregroundStyle(goalType == type ? .white : Color(.secondaryLabel))
                                                 .frame(maxWidth: .infinity)
                                                 .padding(.vertical, 9)
-                                                .background(goalType == type ? brown : Color.clear)
+                                                .background(goalType == type ? Color("buttons") : Color.clear)
                                                 .clipShape(Capsule())
                                         }
                                         .buttonStyle(.plain)
                                     }
                                 }
                                 .padding(4)
-                                .background(brown.opacity(0.1))
+                                .background(Color("buttons").opacity(0.1))
                                 .clipShape(Capsule())
 
                                 ZStack {
 
-                                    // Pages stepper
                                     HStack(spacing: 12) {
                                         stepperButton(icon: "minus") {
                                             if dailyPages > 1 {
@@ -203,7 +190,7 @@ struct BookSearchDetailSheet: View {
 
                                         Text("\(dailyPages)")
                                             .font(.system(size: 24, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(Color(hex: "2C1A0E"))
+                                            .foregroundStyle(Color("darkbrown"))
                                             .frame(width: 100, height: 44)
                                             .background(.ultraThinMaterial)
                                             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -231,7 +218,6 @@ struct BookSearchDetailSheet: View {
                                     .scaleEffect(goalType == "Pages" ? 1 : 0.97)
                                     .animation(.spring(response: 0.35, dampingFraction: 0.8), value: goalType)
 
-                                    // Time pickers
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 14).fill(.ultraThinMaterial)
                                         RoundedRectangle(cornerRadius: 14)
@@ -247,20 +233,29 @@ struct BookSearchDetailSheet: View {
                                             Picker("Hours", selection: $hours) {
                                                 ForEach(0..<24) { Text("\($0)h").tag($0) }
                                             }
-                                            .pickerStyle(.wheel).frame(maxWidth: .infinity)
+                                            .pickerStyle(.wheel)
+                                            .frame(maxWidth: .infinity, maxHeight: 120)
+                                            .clipped()
 
                                             Picker("Minutes", selection: $minutes) {
                                                 ForEach(0..<60) { Text("\($0)m").tag($0) }
                                             }
-                                            .pickerStyle(.wheel).frame(maxWidth: .infinity)
+                                            .pickerStyle(.wheel)
+                                            .frame(maxWidth: .infinity, maxHeight: 120)
+                                            .clipped()
 
                                             Picker("Seconds", selection: $seconds) {
                                                 ForEach(0..<60) { Text("\($0)s").tag($0) }
                                             }
-                                            .pickerStyle(.wheel).frame(maxWidth: .infinity)
+                                            .pickerStyle(.wheel)
+                                            .frame(maxWidth: .infinity, maxHeight: 120)
+                                            .clipped()
                                         }
                                         .frame(height: 120)
+                                        .clipped()
                                     }
+                                    .frame(height: 120)
+                                    .clipped()
                                     .opacity(goalType == "Time" ? 1 : 0)
                                     .scaleEffect(goalType == "Time" ? 1 : 0.97)
                                     .animation(.spring(response: 0.35, dampingFraction: 0.8), value: goalType)
@@ -277,34 +272,30 @@ struct BookSearchDetailSheet: View {
                 .padding(.horizontal, 20)
             }
 
-            // ── Top Bar ──────────────────────────────────────────
+            // ── Top Bar ────────────────────────────────────────────
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color(.label))
-                        .frame(width: 36, height: 36)
-                        .background(.ultraThinMaterial)
+                        .fontWeight(.medium)
+                        .padding(10)
                         .clipShape(Circle())
-                        .overlay(Circle().strokeBorder(.white.opacity(0.4), lineWidth: 1))
-                        .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
                 }
+                .tint(.primary)
+
                 Spacer()
                 Text("Add Book")
                     .font(.system(size: 17, weight: .semibold))
                 Spacer()
+
                 Button {
                     save()
                 } label: {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(canSave ? Color(.label) : Color(.tertiaryLabel))
-                        .frame(width: 36, height: 36)
-                        .background(.ultraThinMaterial)
+                        .fontWeight(.medium)
+                        .padding(10)
                         .clipShape(Circle())
-                        .overlay(Circle().strokeBorder(.white.opacity(0.4), lineWidth: 1))
-                        .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
                 }
+                .tint(.primary)
                 .disabled(!canSave)
                 .animation(.easeInOut(duration: 0.2), value: canSave)
             }
@@ -319,7 +310,8 @@ struct BookSearchDetailSheet: View {
     @ViewBuilder
     private func glassCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 18).fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.6))
             RoundedRectangle(cornerRadius: 18)
                 .strokeBorder(
                     LinearGradient(
@@ -332,6 +324,7 @@ struct BookSearchDetailSheet: View {
             content()
         }
         .shadow(color: .black.opacity(0.06), radius: 14, y: 4)
+        .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 18))
     }
 
     @ViewBuilder
@@ -350,7 +343,7 @@ struct BookSearchDetailSheet: View {
                     )
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(brown)
+                    .foregroundStyle(Color("buttons"))
             }
             .frame(width: 44, height: 44)
             .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
@@ -360,7 +353,7 @@ struct BookSearchDetailSheet: View {
 
     private var cardDivider: some View {
         Rectangle()
-            .fill(brown.opacity(0.12))
+            .fill(Color("darkbrown").opacity(0.12))
             .frame(height: 1)
             .padding(.horizontal, 18)
     }
@@ -373,7 +366,6 @@ struct BookSearchDetailSheet: View {
             isLoadingCover = false
             return
         }
-        // Use higher-res cover by replacing zoom param
         let hiResURL = URL(string: urlString.replacingOccurrences(of: "zoom=1", with: "zoom=2")) ?? url
         do {
             let (data, _) = try await URLSession.shared.data(from: hiResURL)

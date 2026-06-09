@@ -8,9 +8,14 @@ import SwiftData
 
 struct HomeView: View {
 
-    @Query(filter: #Predicate<Book> { $0.status == "reading" })
+    @Query(
+        filter: #Predicate<Book> { $0.status == "reading" },
+        sort: \Book.lastReadDate,
+        order: .reverse
+    )
     var readingBooks: [Book]
 
+    @Query var allBooks: [Book]
     @Query var users: [User]
 
     @StateObject private var viewModel  = HomeViewModel()
@@ -20,12 +25,16 @@ struct HomeView: View {
 
     @State private var selectedRecommended: GoogleBook? = nil
 
+    @State private var selectedBook:     Book? = nil
+    @State private var showStartAlert:   Bool  = false
+    @State private var navigateToTimer:  Bool  = false
+
     private var selectedCategories: [String] {
         users.first?.categories ?? []
     }
 
     private var userBookTitles: Set<String> {
-        Set(readingBooks.compactMap {
+        Set(allBooks.compactMap {
             $0.bookName?.trimmingCharacters(in: .whitespaces).lowercased()
         })
     }
@@ -57,8 +66,12 @@ struct HomeView: View {
                                 .padding(.horizontal, 20)
                                 .padding(.top, 45)
 
-                            ContinueReadingCarousel(books: readingBooks)
-                                .padding(.top, 14)
+                            // ← عدّلنا الاستدعاء هنا
+                            ContinueReadingCarousel(books: readingBooks) { book in
+                                selectedBook   = book
+                                showStartAlert = true
+                            }
+                            .padding(.top, 14)
 
                             SectionHeader(title: "Recommended for you")
                                 .padding(.horizontal, 20)
@@ -75,7 +88,6 @@ struct HomeView: View {
                                         )
                                     }
                                 HomeRecommendedScrollView(books: filtered) { book in
-                                    // ── فتح الـ sheet عند الضغط ──
                                     selectedRecommended = book
                                 }
                                 .padding(.top, 14)
@@ -86,9 +98,34 @@ struct HomeView: View {
                     }
                 }
                 .background(Color("background").ignoresSafeArea())
-                .task {
+                .task(id: selectedCategories) {
                     if !readingBooks.isEmpty && !selectedCategories.isEmpty {
                         await viewModel.loadBooks(for: selectedCategories)
+                    }
+                }
+                .onChange(of: readingBooks.count) {
+                    guard !readingBooks.isEmpty,
+                          !selectedCategories.isEmpty,
+                          viewModel.allRecommended.isEmpty else { return }
+                    Task {
+                        await viewModel.loadBooks(for: selectedCategories)
+                    }
+                }
+
+                // ← Alert: Are you sure you want to start a session?
+                .alert("Start Session?", isPresented: $showStartAlert) {
+                    Button("Cancel", role: .cancel) {
+                        selectedBook = nil
+                    }
+                    Button("Start") {
+                        navigateToTimer = true
+                    }
+                }
+
+                // ← Navigation إلى CandleTimerView
+                .navigationDestination(isPresented: $navigateToTimer) {
+                    if let book = selectedBook {
+                        CandleTimerView(book: book)
                     }
                 }
 
@@ -116,19 +153,16 @@ struct HomeView: View {
         }
         .navigationBarBackButtonHidden(true)
 
-        // ── Search sheet ────────────────────────────────────
         .sheet(isPresented: $showAddBookSheet) {
             AddBookSheetView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
-        // ── Manual add sheet ────────────────────────────────
         .sheet(isPresented: $showManualAdd) {
             AddBookManualView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.hidden)
         }
-        // ── Recommended book sheet ──────────────────────────
         .sheet(item: $selectedRecommended) { book in
             BookSearchDetailSheet(googleBook: book) {
                 selectedRecommended = nil

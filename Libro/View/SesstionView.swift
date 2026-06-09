@@ -86,7 +86,6 @@ struct CandleTimerView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .onAppear { viewModel.onAppear() }
 
-            // ── NoteSheet ────────────────────────────────────────────
             .sheet(isPresented: $viewModel.showNoteSheet) {
                 NoteSheetView(viewModel: viewModel)
                     .presentationDetents([.height(420)])
@@ -95,7 +94,6 @@ struct CandleTimerView: View {
                     .interactiveDismissDisabled()
             }
 
-            // ── كاميرا الـ OCR — تفتح من هنا مباشرة بدل الشيت ───────
             .fullScreenCover(isPresented: $viewModel.showCameraForOCR) {
                 CameraView { cropped, _ in
                     viewModel.showCameraForOCR = false
@@ -104,7 +102,6 @@ struct CandleTimerView: View {
                         if let extracted = try? await ocrService.recognizeText(in: cropped) {
                             await MainActor.run {
                                 viewModel.ocrText = extracted
-                                // ارجع للشيت مع النص
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                     viewModel.showNoteSheet = true
                                 }
@@ -188,6 +185,8 @@ struct CandleTimerView: View {
         book.sessions?.append(session)
         modelContext.insert(session)
 
+        book.lastReadDate = Date()
+
         if book.goalType == "Pages", page > 0 {
             book.currentPage = page
         } else if book.goalType == "Time" {
@@ -199,43 +198,61 @@ struct CandleTimerView: View {
             book.status = "finished"
         }
 
-        if goalAchieved() { updateStreak() }
+        if didRead(stoppedAt: page) {
+            updateStreak()
+        }
 
         do {
             try modelContext.save()
         } catch {
-            print("❌ Error: \(error)")
+            print("❌ Error saving session: \(error)")
         }
 
         return session
     }
 
-    private func goalAchieved() -> Bool {
-        if book.goalType == "Pages" {
-            let prev = book.sessions?.dropLast().last?.stoppedPage ?? 0
-            return (stoppedPage - prev) >= book.goalValue
-        } else if book.goalType == "Time" {
-            return viewModel.elapsedSeconds >= book.goalValue
-        }
-        return false
+    private func didRead(stoppedAt page: Int) -> Bool {
+        if book.goalType == "Pages" { return page > 0 }
+        return viewModel.elapsedSeconds > 0
     }
 
+    // MARK: - تحديث الستريك
+
     private func updateStreak() {
-        guard let user = book.user else { return }
+        let user: User?
+        if let bookUser = book.user {
+            user = bookUser
+        } else {
+            user = try? modelContext.fetch(FetchDescriptor<User>()).first
+        }
+
+        guard let user else {
+            print("❌ updateStreak: no user found")
+            return
+        }
+
+        if book.user == nil {
+            book.user = user
+            if user.books == nil { user.books = [] }
+            user.books?.append(book)
+        }
+
         let calendar = Calendar.current
         let today    = calendar.startOfDay(for: Date())
 
         if let lastDate = user.lastStreakDate {
             let last = calendar.startOfDay(for: lastDate)
-            if last == today { return }
-            else if calendar.dateComponents([.day], from: last, to: today).day == 1 {
+            if last == today {
+                return
+            } else if calendar.dateComponents([.day], from: last, to: today).day == 1 {
                 user.streak = (user.streak ?? 0) + 1
             } else {
-                user.streak = 0
+                user.streak = 1
             }
         } else {
             user.streak = 1
         }
+
         user.lastStreakDate = today
     }
 }
