@@ -23,8 +23,7 @@ struct NoteSheetView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(brown)
                         .frame(width: 36, height: 36)
-                        .background(fieldBackground)
-                        .clipShape(Circle())
+                        .glassEffect(.regular.tint(fieldBackground), in: .circle)
                 }
                 Spacer()
                 Button(action: { viewModel.addNote(text: text, page: page) }) {
@@ -32,8 +31,7 @@ struct NoteSheetView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(brown)
                         .frame(width: 36, height: 36)
-                        .background(fieldBackground)
-                        .clipShape(Circle())
+                        .glassEffect(.regular.tint(fieldBackground), in: .circle)
                 }
             }
             .padding(.top, 8)
@@ -83,8 +81,7 @@ struct NoteSheetView: View {
                 }
             }
             .padding(12)
-            .background(fieldBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .glassEffect(.regular.tint(fieldBackground.opacity(0.5)), in: .rect(cornerRadius: 14))
 
             HStack {
                 Text("Page Number:")

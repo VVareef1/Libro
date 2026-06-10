@@ -56,8 +56,7 @@ struct CandleTimerView: View {
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(Color("lightGray"))
                                 .frame(width: 70, height: 52)
-                                .background(Color("buttons"))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .glassEffect(.regular.tint(Color("buttons")), in: .rect(cornerRadius: 14))
                         }
 
                         Button(action: { viewModel.openNoteSheet() }) {
@@ -65,8 +64,7 @@ struct CandleTimerView: View {
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(Color("lightGray"))
                                 .frame(width: 70, height: 52)
-                                .background(Color("buttons"))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .glassEffect(.regular.tint(Color("buttons")), in: .rect(cornerRadius: 14))
                         }
                     }
                     .padding(.bottom, 48)

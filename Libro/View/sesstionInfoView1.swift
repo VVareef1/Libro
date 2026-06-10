@@ -153,9 +153,144 @@ struct SwipeNoteCard: View {
                 .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: "F2F2F2"))
-        .cornerRadius(20)
-        .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+        .glassEffect(.regular.tint(Color(hex: "F2F2F2").opacity(0.3)), in: .rect(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+    }
+}
+
+// MARK: - SessionInfoTimeline
+
+struct SessionInfoTimeline: View {
+
+    let date: String
+    let timeSpent: String
+    let stoppedPage: Int
+    let bookPages: Int
+
+    private let accentColor = Color("buttons")
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            TimelineRow(
+                icon: "calendar",
+                label: "Date: \(date)",
+                accentColor: accentColor,
+                showConnector: true
+            )
+
+            TimelineRow(
+                icon: "clock",
+                label: "Time Spend: \(timeSpent)",
+                accentColor: accentColor,
+                showConnector: true
+            )
+
+            TimelineRow(
+                icon: "bookmark",
+                label: "Stopped Page\nNumber: \(stoppedPage)/\(bookPages)",
+                accentColor: accentColor,
+                showConnector: false
+            )
+        }
+    }
+}
+
+// MARK: - TimelineRow
+
+struct TimelineRow: View {
+
+    let icon: String
+    let label: String
+    let accentColor: Color
+    let showConnector: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+
+            VStack(spacing: 0) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .regular))
+                    .foregroundColor(Color("buttons"))
+                    .frame(width: 28, height: 28)
+
+                if showConnector {
+                    Rectangle()
+                        .fill(Color(UIColor.separator))
+                        .frame(width: 1.5)
+                        .frame(height: 32)
+                        .padding(.vertical, 4)
+                }
+            }
+
+            Text(label)
+                .font(.system(size: 17, weight: .regular))
+                .foregroundColor(Color("darkbrown"))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - NoteCard
+
+struct NoteCard: View {
+
+    let text: String
+    let page: Int
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            HStack(alignment: .top, spacing: 0) {
+
+                Rectangle()
+                    .fill(Color("buttons"))
+                    .frame(width: 3)
+                    .cornerRadius(1.5)
+
+                Text("\u{201C}\(text)\u{201D}")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color("darkbrown"))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 12)
+                    .padding(.vertical, 4)
+
+                Spacer()
+            }
+
+            Text("Page: \(page)")
+                .font(.system(size: 14, weight: .regular))
+                .foregroundColor(Color("gray"))
+        }
+        .padding(.vertical, 16)
+        .padding(.horizontal, 16)
+        .glassEffect(.regular.tint(Color(hex: "F2F2F2").opacity(0.3)), in: .rect(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+    }
+}
+
+// MARK: - HomeButton
+
+struct HomeButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("Home")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(Color("buttons"))
+                .cornerRadius(27)
+                .glassEffect()
+        }
+        .padding(.horizontal, 44)
+        .padding(.bottom, 16)
+        .padding(.top, 12)
+        .background(Color("background"))
     }
 }
 
