@@ -34,7 +34,7 @@ struct ReflectionView: View {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(UIColor.label))
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                         .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                 }
@@ -43,14 +43,14 @@ struct ReflectionView: View {
 
                 Text("Take along a book")
                     .font(.system(size: 26, weight: .bold))
-                    .foregroundColor(Color(UIColor.label))
+                    .foregroundColor(Color("darkbrown"))
                     .padding(.top, 12)
                     .padding(.horizontal, 20)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Rate your Experience")
                         .font(.system(size: 20, weight: .regular))
-                        .foregroundColor(Color(UIColor.label))
+                        .foregroundColor(Color("darkbrown"))
 
                     StarRatingView(
                         rating: viewModel.rating,
@@ -69,23 +69,15 @@ struct ReflectionView: View {
 
                 Spacer()
 
-                VStack(spacing: 12) {
-                    Button(action: { viewModel.submitJourney() }) {
-                        Text("Journey")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 54)
-                            .background(accentBrown)
-                            .cornerRadius(27)
-                            .glassEffect()
-                    }
-
-                    Button(action: { viewModel.skip() }) {
-                        Text("Skip")
-                            .font(.system(size: 16, weight: .regular))
-                            .foregroundColor(Color(UIColor.secondaryLabel))
-                    }
+                Button(action: { viewModel.submitJourney() }) {
+                    Text("Journey")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(accentBrown)
+                        .cornerRadius(27)
+                        .glassEffect()
                 }
                 .padding(.horizontal, 44)
                 .padding(.bottom, 36)
@@ -129,12 +121,10 @@ struct ReflectionEditorView: View {
 
     @Binding var text: String
 
+    private let fieldBackground = Color(red: 0.92, green: 0.89, blue: 0.84)
+
     var body: some View {
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-
             if text.isEmpty {
                 Text("Write a reflection")
                     .font(.system(size: 16))
@@ -153,6 +143,7 @@ struct ReflectionEditorView: View {
                 .padding(.vertical, 8)
         }
         .frame(height: 260)
+        .glassEffect(.regular.tint(fieldBackground.opacity(0.5)), in: .rect(cornerRadius: 16))
     }
 }
 

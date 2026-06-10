@@ -38,8 +38,9 @@ struct CongratulationView: View {
 
                     ZStack {
                         Circle()
-                            .fill(Color(hex: "EDE8E3"))
+                            .fill(Color.clear)
                             .frame(width: 161, height: 161)
+                            .glassEffect(.regular.tint(Color(hex: "EDE8E3")), in: .circle)
 
                         Image(userIconName)
                             .resizable()
@@ -61,9 +62,7 @@ struct CongratulationView: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)
-                                .background(Color("buttons"))
-                                .clipShape(Capsule())
-                                .glassEffect()
+                                .glassEffect(.regular.tint(Color("buttons")), in: .capsule)
                         }
 
                         Button(action: { navigateToHome = true }) {

@@ -56,7 +56,6 @@ struct NoteSheetView: View {
                     .frame(height: 120)
                     .scrollContentBackground(.hidden)
 
-                // زر الكاميرا — يغلق الشيت ويفتح الكاميرا من CandleTimerView
                 VStack {
                     Spacer()
                     HStack {
@@ -124,7 +123,6 @@ struct NoteSheetView: View {
         .padding(.horizontal, 24)
         .background(background.ignoresSafeArea())
         .onAppear {
-            // لو في نص من الـ OCR يحطه تلقائياً
             if !viewModel.ocrText.isEmpty {
                 text = viewModel.ocrText
                 viewModel.ocrText = ""
