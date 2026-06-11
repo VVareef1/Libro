@@ -112,17 +112,18 @@ struct HomeView: View {
                     }
                 }
 
-                // ← Alert: Are you sure you want to start a session?
-                .alert("Start Session?", isPresented: $showStartAlert) {
+                .alert("Ready to read?", isPresented: $showStartAlert) {
                     Button("Cancel", role: .cancel) {
                         selectedBook = nil
                     }
-                    Button("Start") {
+                    Button("Start Session") {
                         navigateToTimer = true
                     }
+                } message: {
+                    if let book = selectedBook {
+                        Text("You're about to start a reading session for \"\(book.bookName ?? "this book")\". Light the candle and get reading!")
+                    }
                 }
-
-                // ← Navigation إلى CandleTimerView
                 .navigationDestination(isPresented: $navigateToTimer) {
                     if let book = selectedBook {
                         CandleTimerView(book: book)

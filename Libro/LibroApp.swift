@@ -39,12 +39,13 @@ struct LibroApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedSetup {
-                HomeView()
-            } else {
-                ReaderSetupFlowView()
-            }
+//            if hasCompletedSetup {
+//                HomeView()
+//            } else {
+//                ReaderSetupFlowView()
+//            }
 
+            SplashView()
         }
         .modelContainer(sharedModelContainer)
     }

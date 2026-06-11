@@ -66,11 +66,11 @@ struct ChooseReaderView: View {
                     .foregroundColor(name.isEmpty ? Color("darkbrown").opacity(0.35) : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 17)
-                    .background(
-                        Capsule()
-                            .fill(name.isEmpty
-                                  ? Color("darkbrown").opacity(0.08)
-                                  : Color("buttons"))
+                    .glassEffect(
+                        .regular.tint(name.isEmpty
+                                      ? Color("darkbrown").opacity(0.08)
+                                      : Color("buttons")),
+                        in: .capsule
                     )
                     .animation(.easeInOut(duration: 0.2), value: name.isEmpty)
             }
@@ -127,10 +127,14 @@ struct AvatarCarousel: View {
                             let isCenter = avatarNum == selectedAvatar
 
                             Circle()
-                                .fill(Color(hex: "EDE8E3"))
+                                .fill(Color.clear)
                                 .frame(
                                     width:  isCenter ? circleCenter : circleSide,
                                     height: isCenter ? circleCenter : circleSide
+                                )
+                                .glassEffect(
+                                    .regular.tint(Color(hex: "EDE8E3")),
+                                    in: .circle
                                 )
                                 .overlay(
                                     Image("avatar\(avatarNum)")

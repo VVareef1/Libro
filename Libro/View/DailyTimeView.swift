@@ -96,8 +96,7 @@ extension DailyTimeView {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(width: 292, height: 58)
-                .background(Color("buttons"))
-                .clipShape(Capsule())
+                .glassEffect(.regular.tint(Color("buttons")), in: .capsule)
         }
     }
 }

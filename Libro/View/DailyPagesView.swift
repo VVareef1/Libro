@@ -62,8 +62,7 @@ extension DailyPagesView {
                 .foregroundColor(Color("darkbrown"))
                 .multilineTextAlignment(.center)
                 .frame(width: 120, height: 76)
-                .background(Color("lightGray"))
-                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .glassEffect(.regular.tint(Color("lightGray")), in: .rect(cornerRadius: 18))
                 .onChange(of: pagesText) { newValue in
                     pagesText = newValue.filter { $0.isNumber }
                 }
@@ -83,8 +82,7 @@ extension DailyPagesView {
                 .font(.system(size: 28, weight: .regular))
                 .foregroundColor(.white)
                 .frame(width: 60, height: 60)
-                .background(Color("buttons"))
-                .clipShape(Circle())
+                .glassEffect(.regular.tint(Color("buttons")), in: .circle)
         }
     }
 }
@@ -99,8 +97,7 @@ extension DailyPagesView {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(width: 292, height: 58)
-                .background(Color("buttons"))
-                .clipShape(Capsule())
+                .glassEffect(.regular.tint(Color("buttons")), in: .capsule)
         }
         .disabled(pageCount == 0)
         .opacity(pageCount == 0 ? 0.6 : 1)
