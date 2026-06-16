@@ -14,8 +14,11 @@ enum OCRError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noTextFound:      return "لم يتم العثور على نص في الصورة"
-        case .processingFailed(let e): return "فشل معالجة الصورة: \(e.localizedDescription)"
+        case .noTextFound:
+            return "No text was found in the image"
+
+        case .processingFailed(let e):
+            return "Image processing failed: \(e.localizedDescription)"
         }
     }
 }

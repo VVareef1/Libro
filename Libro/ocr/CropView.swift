@@ -91,16 +91,18 @@ struct CropView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("إلغاء") { onCancel() }
+                    Button("Cancel") { onCancel() }
                         .foregroundStyle(.white)
                 }
+
                 ToolbarItem(placement: .principal) {
-                    Text("حدد الاقتباس")
+                    Text("Select Quote")
                         .foregroundStyle(.white)
                         .fontWeight(.medium)
                 }
+
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("تأكيد") { cropAndProceed() }
+                    Button("Confirm") { cropAndProceed() }
                         .disabled(!hasSelection)
                         .foregroundStyle(hasSelection ? Color.yellow : Color.gray)
                         .fontWeight(.semibold)
@@ -108,11 +110,12 @@ struct CropView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 if !hasSelection {
-                    Text("اسحب على الصفحة لتحديد الكلام")
+                    Text("Drag across the page to select the text")
                         .font(.footnote)
                         .foregroundStyle(.white.opacity(0.7))
                         .padding(.bottom, 16)
                 }
+            
             }
         }
         .preferredColorScheme(.dark)
