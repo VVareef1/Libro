@@ -34,7 +34,7 @@ struct CategoryView: View {
                 .padding(.top, 52)
 
             // MARK: Subtitle
-            Text("Lorem ipsum dolor sit amet. Consectetur adipiscing elit.")
+            Text("Select one or more categories to receive personalized book recommendations.")
                 .font(.system(size: 15))
                 .foregroundColor(Color("gray"))
                 .padding(.horizontal, 24)
